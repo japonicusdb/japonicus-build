@@ -1,0 +1,808 @@
+#!/bin/bash -
+
+# make a japonicus Chado db from scratch
+
+set -eu
+set -o pipefail
+
+POMBASE_LEGACY=`pwd`
+
+export PERL5LIB=lib:$PERL5LIB
+
+JBASE_HOME=$1
+DB_NAME_SUFFIX=$2
+HOST=$3
+USER=$4
+PASSWORD=$5
+
+SOURCES_DIR=$JBASE_HOME/sources
+
+DB=jbase-base-$DB_NAME_SUFFIX
+
+echo "building database: $DB on $HOST"
+
+createdb --locale 'C' --template template0 --encoding 'UTF8' $DB
+
+echo Loading template
+
+perl -pne 's/kmr44/japonicus/g' $POMBASE_LEGACY/pombase-chado-base.dump | psql -q $DB |
+  perl -ne 'if (/^\s*setval\s*$/) {
+              my $l2 = <>; if ($l2 =~ /-----/) { my $l3 = <>; if ($l3 =~ /^\s*\d+/) { my $l4 = <>; if ($l4 !~ /\(\d+ row/) { print } } }
+            } else { print unless /^\s*$/ }'
+
+(
+    cd $SOURCES_DIR/pro
+    PRO_FILE=pro_nonreasoned.obo
+    PRO_URL=ftp://ftp.pir.georgetown.edu/databases/ontology/pro_obo/$PRO_FILE
+
+    if GET -i $PRO_FILE $PRO_URL > $PRO_FILE.new
+    then
+       mv $PRO_FILE.new $PRO_FILE
+    else
+      echo "no new $PRO_FILE to download"
+      rm -f $PRO_FILE.new
+    fi
+)
+
+(cd $SOURCES_DIR/; wget -N http://purl.obolibrary.org/obo/go/snapshot/go-basic.obo)
+
+#curl --compressed -L http://purl.obolibrary.org/obo/go/snapshot/extensions/go-plus.owl > $SOURCES_DIR/go-plus.owl &&
+#(cd $SOURCES_DIR/go-ontology-github/src/ontology/extensions; owltools $SOURCES_DIR/go-plus.owl --reasoner elk --make-species-subset --perform-macro-expansion false -t NCBITaxon:4896 -o -f obo --no-check $SOURCES_DIR/go-plus-pombe-only.obo)
+
+PROCESSED_MINI_PRO_OBO=/tmp/processed_mini_pro_$(id -un)_$$.obo
+$JBASE_HOME/pombase-legacy/etc/process_pombe_mini_pr.pl $SOURCES_DIR/pombe-embl/mini-ontologies/pombe_mini_PR.obo > $PROCESSED_MINI_PRO_OBO
+
+GO_OBO=go-basic.obo
+
+OBO_FILES="\
+ obo-relations/src/ontology/subsets/ro-chado.obo \
+ SO-Ontologies-git/Ontology_Files/so-simple.obo \
+ psi-mod-CV/PSI-MOD.obo \
+ pato-simple.obo \
+ pombe-embl/mini-ontologies/iao.obo \
+ pombe-embl/mini-ontologies/quiescence.obo \
+ pombase_fypo_github/supplemental_files/fypo_extension_relations.obo \
+ go-ontology-github/src/ontology/extensions/gorel.obo \
+ go-svn/scratch/xps/go_annotation_extension_relations.obo \
+ pombe-embl/mini-ontologies/fypo_extension.obo \
+ pombe-embl/mini-ontologies/chebi.obo \
+ pombe-embl/mini-ontologies/cl.obo \
+ $PROCESSED_MINI_PRO_OBO \
+ pombe-embl/mini-ontologies/gene_ex_extension_relations.obo \
+ pombe-embl/mini-ontologies/PSI-MOD_extension_relations.obo \
+ pombe-embl/mini-ontologies/SO_feature_relations.obo \
+ pombe-embl/mini-ontologies/has_qualifier_range.obo \
+ pombe-embl/mini-ontologies/pombase_gene_expression_ontology.obo \
+ pombase_fypo_github/fypo-simple-pombase.obo \
+ $GO_OBO"
+
+CONNECT_STRING="dbi:Pg:dbname=$DB"
+if [ x$HOST != x ]
+then
+    CONNECT_STRING="$CONNECT_STRING;host=$HOST"
+fi
+
+CHOBO_LOAD_LOG=chobo_load.log
+echo 'Starting OBO loading at:' `date`
+echo log file: $CHOBO_LOAD_LOG
+OLD_DIR=`pwd`
+cd $SOURCES_DIR
+if $JBASE_HOME/chobo/script/chobo_load $CONNECT_STRING $USER $PASSWORD $POMBASE_LEGACY/etc/pombase-relations.obo $OBO_FILES \
+   gmod-schema-latest/chado/load/etc/feature_property.obo \
+   pombase_fypo_github/peco.obo pombase_terms-v62.obo > $CHOBO_LOAD_LOG 2>&1
+then
+  echo 'Finished OBO loading at:' `date`
+else 
+  echo chobo_load failed:
+  cat $CHOBO_LOAD_LOG
+  exit 1
+fi
+
+cd $OLD_DIR
+
+date
+echo populate cvtermpath using owltools
+export OWLTOOLS_MEMORY=20g
+(cd $SOURCES_DIR; $CHADO_CLOSURE_TOOL $HOST $DB $USER $PASSWORD $OBO_FILES)
+
+date; echo finished
+
+# prevent duplicate feature uniquenames
+psql -q $DB -c 'CREATE UNIQUE INDEX pombase_feature_uniquename_unique_idx ON feature(uniquename);'
+
+psql -q $DB -c 'CREATE INDEX pombase_cvtermsynonym_synonym_idx1 on cvtermsynonym(synonym);'
+
+# view definitions for extension terms
+psql -q $DB -c "CREATE materialized VIEW pombase_feature_cvterm_with_ext_parents AS
+SELECT fc.feature_cvterm_id,
+       fc.feature_id,
+       pub_id,
+       parent_t.name AS base_cvterm_name,
+       parent_t.cvterm_id AS base_cvterm_id,
+       parent_cv.name AS base_cv_name,
+       child_t.name AS cvterm_name,
+       child_t.cvterm_id AS cvterm_id
+FROM feature_cvterm fc
+JOIN cvterm child_t ON child_t.cvterm_id = fc.cvterm_id
+JOIN cvterm_relationship r ON child_t.cvterm_id = r.subject_id
+JOIN cvterm parent_t ON r.object_id = parent_t.cvterm_id
+JOIN cv parent_cv ON parent_cv.cv_id = parent_t.cv_id
+JOIN cv child_cv ON child_cv.cv_id = child_t.cv_id
+JOIN cvterm r_type ON r.type_id = r_type.cvterm_id
+WHERE r_type.name = 'is_a'
+  AND child_cv.name = 'PomBase annotation extension terms';"
+
+psql -q $DB -c "CREATE materialized VIEW pombase_feature_cvterm_no_ext_terms AS
+SELECT fc.feature_cvterm_id,
+       fc.feature_id,
+       pub_id,
+       t.name AS base_cvterm_name,
+       t.cvterm_id AS base_cvterm_id,
+       cv.name AS base_cv_name,
+       t.name AS cvterm_name,
+       t.cvterm_id
+FROM feature_cvterm fc
+JOIN cvterm t ON t.cvterm_id = fc.cvterm_id
+JOIN cv ON cv.cv_id = t.cv_id
+WHERE cv.name <> 'PomBase annotation extension terms';"
+
+psql -q $DB -c "CREATE materialized VIEW pombase_feature_cvterm_ext_resolved_terms AS
+ SELECT *
+   FROM pombase_feature_cvterm_no_ext_terms
+UNION
+ SELECT *
+   FROM pombase_feature_cvterm_with_ext_parents;"
+
+psql -q $DB -c "CREATE INDEX pombase_feature_cvterm_ext_resolved_terms_feature_id_idx ON pombase_feature_cvterm_ext_resolved_terms(feature_id);"
+psql -q $DB -c "CREATE INDEX pombase_feature_cvterm_ext_resolved_terms_cvterm_id_idx ON pombase_feature_cvterm_ext_resolved_terms(cvterm_id);"
+psql -q $DB -c "CREATE INDEX pombase_feature_cvterm_ext_resolved_terms_cvterm_name_idx ON pombase_feature_cvterm_ext_resolved_terms(cvterm_name);"
+psql -q $DB -c "CREATE INDEX pombase_feature_cvterm_ext_resolved_terms_base_cvterm_id_idx ON pombase_feature_cvterm_ext_resolved_terms(base_cvterm_id);"
+psql -q $DB -c "CREATE INDEX pombase_feature_cvterm_ext_resolved_terms_base_cvterm_name_idx ON pombase_feature_cvterm_ext_resolved_terms(base_cvterm_name);"
+
+psql -q $DB -c "CREATE MATERIALIZED VIEW pombase_extension_rels_and_values AS SELECT t.cvterm_id AS cvterm_id,
+ substring(pt.name FROM 'annotation_extension_relation-(.*)') AS rel_name, p.value AS value FROM
+ cvtermprop p JOIN cvterm pt ON p.type_id = pt.cvterm_id JOIN cvterm t ON
+ p.cvterm_id = t.cvterm_id
+ WHERE pt.name LIKE 'annotation_extension_relation-%' AND t.cvterm_id IN
+ (SELECT subject_id FROM cvterm_relationship WHERE object_id IN (SELECT
+ cvterm_id FROM cvterm WHERE cv_id = (SELECT cv_id FROM cv WHERE name =
+ 'fission_yeast_phenotype'))) UNION ALL SELECT rel.subject_id as cvterm_id,
+ rel_type.name as rel_name, object.name as value from cvterm_relationship rel join cvterm rel_type on
+ rel.type_id = rel_type.cvterm_id join cvterm object on rel.object_id = object.cvterm_id
+ where rel.subject_id in (select subject_id from
+ cvterm_relationship where object_id in (select cvterm_id from cvterm where
+ cv_id = (select cv_id from cv where name = 'fission_yeast_phenotype'))) and
+ rel_type.cv_id = (select cv_id from cv where name = 'fypo_extension_relations');"
+
+psql -q $DB <<'EOF'
+CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
+  WITH
+  pub_community_curated_flags AS
+  (SELECT DISTINCT pub.pub_id, (value = 'community') AS flag
+    FROM pubprop date_prop join pub on pub.pub_id = date_prop.pub_id
+    JOIN cvterm prop_type on date_prop.type_id = prop_type.cvterm_id
+   WHERE prop_type.name = 'canto_curator_role')
+ SELECT gene.uniquename AS gene_uniquename,
+        'FC:' || fc.feature_cvterm_id AS id, pub.uniquename AS pmid,
+   (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) AS publication_community_curated,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop date_prop
+    WHERE fc.feature_cvterm_id = date_prop.feature_cvterm_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) AS annotation_date,
+   substring((SELECT distinct(value)
+    FROM feature_cvtermprop date_prop
+    WHERE fc.feature_cvterm_id = date_prop.feature_cvterm_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) FROM E'^(\\d\\d\\d\\d)')::integer AS annotation_year,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) AS session,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'curator_name')) AS curator_name,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'community_curated'))::boolean AS community_curated,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'annotation_throughput_type') limit 1) AS annotation_throughput_type,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop evidence_prop
+    WHERE fc.feature_cvterm_id = evidence_prop.feature_cvterm_id
+      AND evidence_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'evidence')) AS evidence_code,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop assigned_by_prop
+    WHERE fc.feature_cvterm_id = assigned_by_prop.feature_cvterm_id
+      AND assigned_by_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'assigned_by')) AS annotation_source,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop source_file_prop
+    WHERE fc.feature_cvterm_id = source_file_prop.feature_cvterm_id
+      AND source_file_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'source_file')) AS source_file,
+   base_cv_name AS annotation_type
+ FROM feature gene
+ JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
+ JOIN feature_relationship r ON r.object_id = gene.feature_id
+ JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
+ JOIN pombase_feature_cvterm_ext_resolved_terms fc ON gene.feature_id = fc.feature_id
+ JOIN pub ON fc.pub_id = pub.pub_id
+ WHERE rel_type.name = 'part_of'
+   AND gene_type.name = 'gene'
+ UNION
+ SELECT gene.uniquename AS gene_uniquename,
+        'FC:' || fc.feature_cvterm_id AS id, pub.uniquename AS pmid,
+   (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop date_prop
+    WHERE fc.feature_cvterm_id = date_prop.feature_cvterm_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) AS annotation_date,
+   substring((SELECT distinct(value)
+    FROM feature_cvtermprop date_prop
+    WHERE fc.feature_cvterm_id = date_prop.feature_cvterm_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) FROM E'^(\\d\\d\\d\\d)')::integer AS annotation_year,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) AS session,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'curator_name')) AS curator_name,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'community_curated'))::boolean AS community_curated,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'annotation_throughput_type') limit 1) AS annotation_throughput_type,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop evidence_prop
+    WHERE fc.feature_cvterm_id = evidence_prop.feature_cvterm_id
+      AND evidence_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'evidence')) AS evidence_code,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop assigned_by_prop
+    WHERE fc.feature_cvterm_id = assigned_by_prop.feature_cvterm_id
+      AND assigned_by_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'assigned_by')) AS annotation_source,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop source_file_prop
+    WHERE fc.feature_cvterm_id = source_file_prop.feature_cvterm_id
+      AND source_file_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'source_file')) AS source_file,
+   base_cv_name AS annotation_type
+ FROM feature gene
+ JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
+ JOIN feature_relationship r ON r.object_id = gene.feature_id
+ JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
+ JOIN feature mrna ON mrna.feature_id = subject_id
+ JOIN cvterm mrna_type ON mrna_type.cvterm_id = mrna.type_id
+ JOIN pombase_feature_cvterm_ext_resolved_terms fc ON mrna.feature_id = fc.feature_id
+ JOIN pub ON fc.pub_id = pub.pub_id
+ WHERE rel_type.name = 'part_of'
+   AND gene_type.name = 'gene'
+   AND mrna_type.name = 'mRNA'
+ UNION
+ SELECT gene.uniquename AS gene_uniquename,
+        'FC:' || fc.feature_cvterm_id AS id, pub.uniquename AS pmid,
+   (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop date_prop
+    WHERE fc.feature_cvterm_id = date_prop.feature_cvterm_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) AS annotation_date,
+   substring((SELECT distinct(value)
+    FROM feature_cvtermprop date_prop
+    WHERE fc.feature_cvterm_id = date_prop.feature_cvterm_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) FROM E'^(\\d\\d\\d\\d)')::integer AS annotation_year,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) AS session,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'curator_name')) AS curator_name,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'community_curated'))::boolean AS community_curated,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'annotation_throughput_type') limit 1) AS annotation_throughput_type,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop evidence_prop
+    WHERE fc.feature_cvterm_id = evidence_prop.feature_cvterm_id
+      AND evidence_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'evidence')) AS evidence_code,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop assigned_by_prop
+    WHERE fc.feature_cvterm_id = assigned_by_prop.feature_cvterm_id
+      AND assigned_by_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'assigned_by')) AS annotation_source,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop source_file_prop
+    WHERE fc.feature_cvterm_id = source_file_prop.feature_cvterm_id
+      AND source_file_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'source_file')) AS source_file,
+   base_cv_name AS annotation_type
+ FROM feature gene
+ JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
+ JOIN feature_relationship allele_gene_rel ON allele_gene_rel.object_id = gene.feature_id
+ JOIN feature allele ON allele.feature_id = allele_gene_rel.subject_id
+ JOIN cvterm allele_gene_rel_type ON allele_gene_rel.type_id = allele_gene_rel_type.cvterm_id
+ JOIN feature_relationship allele_genotype_rel ON allele_genotype_rel.subject_id = allele.feature_id
+ JOIN feature genotype ON allele_genotype_rel.object_id = genotype.feature_id
+ JOIN cvterm allele_genotype_rel_type ON allele_genotype_rel.type_id = allele_genotype_rel_type.cvterm_id
+ JOIN pombase_feature_cvterm_ext_resolved_terms fc ON genotype.feature_id = fc.feature_id
+ JOIN pub ON fc.pub_id = pub.pub_id
+ WHERE allele_gene_rel_type.name = 'instance_of'
+   AND allele_genotype_rel_type.name = 'part_of'
+   AND gene_type.name = 'gene'
+ UNION
+ SELECT sub.uniquename AS gene_uniquename,
+        'FR:' || r.feature_relationship_id AS id, pub.uniquename AS pmid,
+   (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop date_prop
+    WHERE r.feature_relationship_id = date_prop.feature_relationship_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) AS annotation_date,
+   substring((SELECT distinct(value)
+    FROM feature_relationshipprop date_prop
+    WHERE r.feature_relationship_id = date_prop.feature_relationship_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) FROM E'^(\\d\\d\\d\\d)')::integer AS annotation_year,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) AS session,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'curator_name')) AS curator_name,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'community_curated') limit 1)::boolean AS community_curated,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'annotation_throughput_type') limit 1) AS annotation_throughput_type,
+   NULL,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop source_database_prop
+    WHERE r.feature_relationship_id = source_database_prop.feature_relationship_id
+      AND source_database_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'source_database')) AS annotation_source,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop source_file_prop
+    WHERE r.feature_relationship_id = source_file_prop.feature_relationship_id
+      AND source_file_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'source_file')) AS source_file,
+    rel_type.name AS annotation_type
+ FROM feature_relationship r
+ JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
+ JOIN feature sub ON r.subject_id = sub.feature_id
+ JOIN cvterm ft ON sub.type_id = ft.cvterm_id
+ JOIN feature_relationship_pub frp ON frp.feature_relationship_id = r.feature_relationship_id
+ JOIN pub ON frp.pub_id = pub.pub_id
+ WHERE ft.name = 'gene'
+   AND (rel_type.name = 'interacts_genetically'
+        OR rel_type.name = 'interacts_physically')
+ UNION
+ SELECT obj.uniquename AS gene_uniquename,
+        'FR:' || r.feature_relationship_id AS id, pub.uniquename AS pmid,
+   (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop date_prop
+    WHERE r.feature_relationship_id = date_prop.feature_relationship_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) AS annotation_date,
+   substring((SELECT distinct(value)
+    FROM feature_relationshipprop date_prop
+    WHERE r.feature_relationship_id = date_prop.feature_relationship_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) FROM E'^(\\d\\d\\d\\d)')::integer AS annotation_year,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) AS session,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'curator_name')) AS curator_name,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'community_curated') limit 1)::boolean AS community_curated,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'annotation_throughput_type') limit 1) AS annotation_throughput_type,
+   NULL,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop source_database_prop
+    WHERE r.feature_relationship_id = source_database_prop.feature_relationship_id
+      AND source_database_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'source_database')) AS annotation_source,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop source_file_prop
+    WHERE r.feature_relationship_id = source_file_prop.feature_relationship_id
+      AND source_file_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'source_file')) AS source_file,
+   rel_type.name AS annotation_type
+ FROM feature_relationship r
+ JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
+ JOIN feature obj ON r.object_id = obj.feature_id
+ JOIN cvterm ft ON obj.type_id = ft.cvterm_id
+ JOIN feature_relationship_pub frp ON frp.feature_relationship_id = r.feature_relationship_id
+ JOIN pub ON frp.pub_id = pub.pub_id
+ WHERE ft.name = 'gene'
+   AND (rel_type.name = 'interacts_genetically'
+        OR rel_type.name = 'interacts_physically');
+EOF
+
+psql -q $DB -c "CREATE MATERIALIZED VIEW pombase_annotation_summary AS
+SELECT distinct id, pmid, publication_community_curated, annotation_date,
+       annotation_year, session, curator_name, community_curated, annotation_throughput_type,
+       evidence_code, annotation_source, source_file, annotation_type
+  FROM pombase_genes_annotations_dates;"
+
+psql -q $DB -c "CREATE MATERIALIZED VIEW pombase_annotated_gene_features_per_publication AS
+SELECT gene.uniquename AS gene_uniquename, pub.uniquename AS pmid,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) as session
+   FROM feature gene
+   JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
+   JOIN feature_relationship r ON r.object_id = gene.feature_id
+   JOIN cvterm t ON r.type_id = t.cvterm_id
+   JOIN feature mrna ON mrna.feature_id = subject_id
+   JOIN cvterm mrna_type ON mrna_type.cvterm_id = mrna.type_id
+   JOIN feature_cvterm fc ON mrna.feature_id = fc.feature_id
+   JOIN pub ON fc.pub_id = pub.pub_id
+   WHERE t.name = 'part_of'
+     AND gene_type.name = 'gene'
+     AND mrna_type.name = 'mRNA'
+UNION
+ SELECT gene.uniquename AS gene_uniquename, pub.uniquename AS pmid,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) as session
+   FROM feature gene
+   JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
+   JOIN feature_relationship allele_gene_rel ON allele_gene_rel.object_id = gene.feature_id
+   JOIN feature allele ON allele.feature_id = allele_gene_rel.subject_id
+   JOIN cvterm allele_gene_rel_type ON allele_gene_rel.type_id = allele_gene_rel_type.cvterm_id
+   JOIN feature_relationship allele_genotype_rel ON allele_genotype_rel.subject_id = allele.feature_id
+   JOIN feature genotype ON allele_genotype_rel.object_id = genotype.feature_id
+   JOIN cvterm allele_genotype_rel_type ON allele_genotype_rel.type_id = allele_genotype_rel_type.cvterm_id
+   JOIN feature_cvterm fc ON genotype.feature_id = fc.feature_id
+   JOIN pub ON fc.pub_id = pub.pub_id
+   WHERE allele_gene_rel_type.name = 'instance_of'
+     AND allele_genotype_rel_type.name = 'part_of'
+     AND gene_type.name = 'gene'
+UNION
+ SELECT sub.uniquename AS gene_uniquename, pub.uniquename AS pmid,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) as session
+   FROM feature_relationship r
+   JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
+   JOIN feature sub ON r.subject_id = sub.feature_id
+   JOIN cvterm ft ON sub.type_id = ft.cvterm_id
+   JOIN feature_relationship_pub frp ON frp.feature_relationship_id = r.feature_relationship_id
+   JOIN pub ON frp.pub_id = pub.pub_id
+   WHERE ft.name = 'gene'
+     AND (rel_type.name = 'interacts_genetically'
+          OR rel_type.name = 'interacts_physically')
+UNION
+ SELECT obj.uniquename AS gene_uniquename, pub.uniquename AS pmid,
+   (SELECT distinct(value)
+    FROM feature_relationshipprop session_prop
+    WHERE r.feature_relationship_id = session_prop.feature_relationship_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) as session
+   FROM feature_relationship r
+   JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
+   JOIN feature obj ON r.object_id = obj.feature_id
+   JOIN cvterm ft ON obj.type_id = ft.cvterm_id
+   JOIN feature_relationship_pub frp ON frp.feature_relationship_id = r.feature_relationship_id
+   JOIN pub ON frp.pub_id = pub.pub_id
+   WHERE ft.name = 'gene'
+     AND (rel_type.name = 'interacts_genetically'
+          OR rel_type.name = 'interacts_physically');"
+
+psql -q $DB -c "CREATE MATERIALIZED VIEW pombase_genotypes_alleles_genes_mrna AS
+SELECT genotype.uniquename genotype_uniquename, genotype.feature_id as genotype_feature_id,
+ allele.uniquename as allele_uniquename, allele.name as allele_name,
+ allele.feature_id as allele_feature_id,
+ gene.feature_id as gene_feature_id,
+ gene.uniquename as gene_uniquename, gene.name as gene_name,
+ mrna.feature_id as mrna_feature_id, mrna.uniquename as mrna_uniquename
+FROM feature genotype
+JOIN cvterm genotype_type on genotype.type_id = genotype_type.cvterm_id
+JOIN feature_relationship genotype_allele_rel ON genotype_allele_rel.object_id = genotype.feature_id
+JOIN cvterm genotype_allele_rel_type ON genotype_allele_rel_type.cvterm_id = genotype_allele_rel.type_id
+JOIN feature allele ON genotype_allele_rel.subject_id = allele.feature_id
+JOIN cvterm allele_type on allele.type_id = allele_type.cvterm_id
+JOIN feature_relationship gene_genotype_rel on allele.feature_id = gene_genotype_rel.subject_id
+JOIN feature gene on gene.feature_id = gene_genotype_rel.object_id
+JOIN cvterm gene_type on gene.type_id = gene_type.cvterm_id
+JOIN cvterm gene_genotype_rel_type on gene_genotype_rel.type_id = gene_genotype_rel_type.cvterm_id
+JOIN feature_relationship gene_mrna_rel on gene.feature_id = gene_mrna_rel.object_id
+JOIN cvterm gene_mrna_rel_type on gene_mrna_rel.type_id = gene_mrna_rel_type.cvterm_id
+JOIN feature mrna on gene_mrna_rel.subject_id = mrna.feature_id
+WHERE genotype_allele_rel_type.name = 'part_of'
+  AND gene_genotype_rel_type.name = 'instance_of'
+  AND gene_mrna_rel_type.name = 'part_of'
+  AND genotype_type.name = 'genotype'
+  AND allele_type.name = 'allele'
+  AND gene_type.name = 'gene';"
+
+
+psql -q $DB <<'EOF'
+CREATE MATERIALIZED VIEW pombase_publication_curation_summary AS
+WITH all_pubs_raw AS
+  (SELECT uniquename AS pmid,
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_session'
+      LIMIT 1) AS canto_session,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_added_date'
+      LIMIT 1)::TIMESTAMP AS canto_added_date,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_first_sent_to_curator_date'
+      LIMIT 1)::TIMESTAMP AS canto_first_sent_to_curator_date,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_first_approved_date'
+      LIMIT 1)::TIMESTAMP AS canto_first_approved_date,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_session_accepted_date'
+      LIMIT 1)::TIMESTAMP AS canto_session_accepted_date,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_session_submitted_date'
+      LIMIT 1)::TIMESTAMP AS canto_session_submitted_date,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_approved_date'
+      LIMIT 1)::TIMESTAMP AS canto_approved_date,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_curator_name'
+      LIMIT 1) AS canto_curator_name,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_triage_status'
+      LIMIT 1) AS canto_triage_status,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_annotation_status'
+      LIMIT 1) AS canto_annotation_status,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_curator_role'
+      LIMIT 1) AS canto_curator_role,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'canto_approver_name'
+      LIMIT 1) AS canto_approver_name,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'pubmed_publication_date'
+      LIMIT 1) AS pubmed_publication_date,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'pubmed_electronic_publication_date'
+      LIMIT 1)::date AS pubmed_electronic_publication_date,
+
+     (SELECT value
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'pubmed_entrez_date'
+      LIMIT 1)::date AS pubmed_entrez_date,
+
+     (SELECT substring(value FROM E'\\d\\d\\d\\d')::integer
+      FROM pubprop pp
+      JOIN cvterm ppt ON pp.type_id = ppt.cvterm_id
+      WHERE pp.pub_id = pub.pub_id
+        AND ppt.name = 'pubmed_publication_date'
+      LIMIT 1) AS pubmed_publication_year
+
+   FROM pub WHERE uniquename LIKE 'PMID:%')
+SELECT all_pubs_raw.*,
+       CASE WHEN pubmed_electronic_publication_date IS NOT NULL
+             AND pubmed_electronic_publication_date < pubmed_entrez_date
+          THEN pubmed_electronic_publication_date
+          ELSE pubmed_entrez_date
+       END AS pubmed_earliest_date,
+       EXTRACT (YEAR FROM canto_added_date)::integer AS canto_added_year,
+       EXTRACT (YEAR FROM canto_first_sent_to_curator_date)::integer AS canto_first_sent_to_curator_year,
+       EXTRACT (YEAR FROM canto_first_approved_date)::integer AS canto_first_approved_year,
+       EXTRACT (YEAR FROM canto_session_accepted_date)::integer AS canto_session_accepted_year,
+       EXTRACT (YEAR FROM canto_session_submitted_date)::integer AS canto_session_submitted_year,
+       EXTRACT (YEAR FROM canto_approved_date)::integer AS canto_approved_year
+FROM all_pubs_raw;
+EOF
+
