@@ -437,7 +437,7 @@ $POMCUR/bin/pombase-chado-json -c $MAIN_CONFIG \
    --pfam-data-file $JAPONICUS_DATA/pfam_japonicus_protein_data.json \
    2>&1 | tee $LOG_DIR/$log_file.web-json-write
 
-find $CURRENT_BUILD_DIR/fasta -name '*.fa' | xargs gzip -9vf
+find $CURRENT_BUILD_DIR/fasta -name '*.fa' | xargs gzip -9f
 
 cp $LOG_DIR/$log_file.web-json-write $CURRENT_BUILD_DIR/logs/
 
