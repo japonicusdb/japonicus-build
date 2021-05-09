@@ -211,6 +211,18 @@ $POMBASE_CHADO/script/pombase-process.pl $LOAD_CONFIG change-terms \
   "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.go-term-mapping
 
 
+CURATION_TOOL_DATA=$POMCUR/backups/japonicus-current.json
+
+echo
+echo load Canto data
+$POMBASE_CHADO/script/pombase-import.pl load-pombase-chado.yaml canto-json \
+   --organism-taxonid=4897 --db-prefix=JaponicusDB \
+   "$HOST" $DB $USER $PASSWORD < $CURATION_TOOL_DATA 2>&1 | tee $LOG_DIR/$log_file.curation_tool_data
+
+echo annotation count after loading curation tool data:
+evidence_summary $DB
+
+
 echo
 echo counts of assigned_by before filtering:
 assigned_by_summary $DB
