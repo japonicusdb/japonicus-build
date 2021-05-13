@@ -110,10 +110,10 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG organisms \
 
 echo loading pombe genes
 
-curl https://curation.pombase.org/dumps/latest_build/misc/gene_IDs_names.tsv |
+curl https://curation.pombase.org/dumps/latest_build/misc/gene_IDs_names_products.tsv |
 $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
-    --organism-taxonid=4896 --uniquename-column=1 --name-column=2 --feature-type=gene \
-    --ignore-short-lines \
+    --organism-taxonid=4896 --uniquename-column=1 --name-column=3 --feature-type=gene \
+    --product-column=5 --ignore-short-lines \
     "$HOST" $DB $USER $PASSWORD
 
 
