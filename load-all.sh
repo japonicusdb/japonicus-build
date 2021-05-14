@@ -468,6 +468,7 @@ rm -f $DUMPS_DIR/latest_build
 ln -s $CURRENT_BUILD_DIR $DUMPS_DIR/latest_build
 
 (cd $JBASE_HOME/container_build
+ (cd japonicus-config && git pull)
  cp -f japonicus-config/japonicus_site_config.json main_config.json
  nice -10 $JAPONICUS_BUILD/build_container.sh $DB_DATE_VERSION $DUMPS_DIR/latest_build)
 
