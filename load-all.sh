@@ -48,16 +48,11 @@ POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
 (cd $JAPONICUS_CONFIG; git pull) || die "can't update japonicus-config"
 
 
-if false
-then
-
 (cd pombase-legacy
  export PATH=JBASE_HOME/chobo/script/:/usr/local/owltools-v0.3.0-74-gee0f8bbd/OWLTools-Runner/bin/:$PATH
  export CHADO_CLOSURE_TOOL=$JBASE_HOME/pombase-chado/script/relation-graph-chado-closure.pl
  export PERL5LIB=$POMBASE_CHADO/lib:$JBASE_HOME/chobo/lib/
  time nice -19 $JAPONICUS_BUILD/make-db $JBASE_HOME $DATE "$HOST" $USER $PASSWORD) || die "make-db failed"
-
-fi
 
 
 DB_DATE_VERSION=$DATE
