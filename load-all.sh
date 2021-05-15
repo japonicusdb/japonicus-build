@@ -21,7 +21,7 @@ die() {
 JBASE_HOME=`pwd`
 
 JAPONICUS_BUILD=$JBASE_HOME/japonicus-build
-JAPONICUS_DATA=$JBASE_HOME/japonicus-data
+JAPONICUS_CURATION=$JBASE_HOME/japonicus-curation
 JAPONICUS_CONFIG=$JBASE_HOME/japonicus-config
 
 POMCUR=/var/pomcur
@@ -44,15 +44,20 @@ POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
 (cd pombase-website; git pull) || die "Failed to update pombase-website"
 
 (cd $JAPONICUS_BUILD; git pull) || die "can't update japonicus-build"
-(cd $JAPONICUS_DATA; git pull) || die "can't update japonicus-data"
+(cd $JAPONICUS_CURATION; git pull) || die "can't update japonicus-curation"
 (cd $JAPONICUS_CONFIG; git pull) || die "can't update japonicus-config"
 
+
+if false
+then
 
 (cd pombase-legacy
  export PATH=JBASE_HOME/chobo/script/:/usr/local/owltools-v0.3.0-74-gee0f8bbd/OWLTools-Runner/bin/:$PATH
  export CHADO_CLOSURE_TOOL=$JBASE_HOME/pombase-chado/script/relation-graph-chado-closure.pl
  export PERL5LIB=$POMBASE_CHADO/lib:$JBASE_HOME/chobo/lib/
  time nice -19 $JAPONICUS_BUILD/make-db $JBASE_HOME $DATE "$HOST" $USER $PASSWORD) || die "make-db failed"
+
+fi
 
 
 DB_DATE_VERSION=$DATE
@@ -122,7 +127,7 @@ log_file=log.`date +'%Y-%m-%d-%H-%M-%S'`
 $POMBASE_LEGACY/script/load-chado.pl --taxonid=4897 \
   --gene-ex-qualifiers $JAPONICUS_CONFIG/gene_ex_qualifiers \
   $LOAD_CONFIG \
-  "$HOST" $DB $USER $PASSWORD $JBASE_HOME/japonicus-data/contigs/*.contig 2>&1 | tee $log_file || exit 1
+  "$HOST" $DB $USER $PASSWORD $JBASE_HOME/japonicus-curation/contigs/*.contig 2>&1 | tee $log_file || exit 1
 
 
 $POMBASE_LEGACY/etc/process-log.pl $log_file
@@ -132,7 +137,7 @@ $POMBASE_LEGACY/etc/process-log.pl $log_file
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
     --property-name="uniprot_identifier" --organism-taxonid=4897 \
     --feature-uniquename-column=1 --property-column=2 \
-    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-data/systematic_id_uniprot_mapping.tsv
+    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/systematic_id_uniprot_mapping.tsv
 
 
 evidence_summary () {
@@ -180,7 +185,7 @@ echo load Compara orthologs
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=null --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
   --swap-direction \
-  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-data/manual_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.manual_orthologs
+  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/manual_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.manual_orthologs
 
 
 refresh_views
@@ -445,7 +450,7 @@ $POMCUR/bin/pombase-chado-json -c $MAIN_CONFIG \
    -p "postgres://$USER:$PASSWORD@localhost/$DB" \
    -d $CURRENT_BUILD_DIR/ --go-eco-mapping=$SOURCES/gaf-eco-mapping.txt \
    -i $JAPONICUS_SOURCES/japonicus_domain_results.json \
-   --pfam-data-file $JAPONICUS_DATA/pfam_japonicus_protein_data.json \
+   --pfam-data-file $JAPONICUS_CURATION/pfam_japonicus_protein_data.json \
    2>&1 | tee $LOG_DIR/$log_file.web-json-write
 
 find $CURRENT_BUILD_DIR/fasta -name '*.fa' | xargs gzip -9f
