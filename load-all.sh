@@ -178,9 +178,9 @@ gzip -d < $CURRENT_GOA_GAF | rg '\ttaxon:(4897|402676)\t' |
 echo load Compara orthologs
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
-  --publication=null --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
+  --publication=PMID:26896847 --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
   --swap-direction \
-  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/manual_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.manual_orthologs
+  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/compara_japonicus_pombe_orthologs.txt 2>&1 | tee $LOG_DIR/$log_file.compara_japonicus_pombe_orthologs
 
 
 refresh_views
