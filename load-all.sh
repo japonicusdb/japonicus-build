@@ -83,7 +83,7 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG organisms \
 ## echo loading human genes
 ## $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
 ##     --organism-taxonid=9606 --uniquename-column=1 --name-column=2 --feature-type=gene \
-##     --product-column=3 \
+##     --transcript-so-name=transcript --product-column=3 \
 ##     --ignore-lines-matching="^hgnc_id.symbol" --ignore-short-lines \
 ##     "$HOST" $DB $USER $PASSWORD < $SOURCES/hgnc_complete_set.txt
 
@@ -102,6 +102,7 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG organisms \
 ##   echo loading $so_type genes from SGD data file
 ##   $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
 ##       --organism-taxonid=4932 --uniquename-column=5 --name-column=6 \
+##       --transcript-so-name=$so_type \
 ##       --column-filter="1=${so_type} gene" --feature-type=gene \
 ##       "$HOST" $DB $USER $PASSWORD < $SOURCES/sgd_yeastmine_genes.tsv
 ## done
@@ -113,6 +114,7 @@ echo loading pombe genes
 $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
     --organism-taxonid=4896 --uniquename-column=1 --name-column=3 --feature-type=gene \
     --product-column=5 --ignore-short-lines \
+    --transcript-so-name=transcript \
     "$HOST" $DB $USER $PASSWORD < /var/www/pombase/dumps/latest_build/misc/gene_IDs_names_products.tsv
 
 
