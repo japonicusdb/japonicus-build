@@ -184,6 +184,14 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/compara_japonicus_pombe_orthologs.txt 2>&1 | tee $LOG_DIR/$log_file.compara_japonicus_pombe_orthologs
 
 
+echo transfer names and products from pombe to japonicus
+
+$JBASE_HOME/pombase-chado/script/pombase-process.pl \
+  $LOAD_CONFIG transfer-names-and-products \
+  --source-organism-taxonid=4896 --dest-organism-taxonid=4897 \
+  "$HOST" $DB $USER $PASSWORD
+
+
 refresh_views
 
 # run this before loading the Canto data because the Canto loader creates
