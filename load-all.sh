@@ -48,11 +48,16 @@ POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
 (cd $JAPONICUS_CONFIG; git pull) || die "can't update japonicus-config"
 
 
+if false
+then
+
 (cd pombase-legacy
  export PATH=JBASE_HOME/chobo/script/:/usr/local/owltools-v0.3.0-74-gee0f8bbd/OWLTools-Runner/bin/:$PATH
  export CHADO_CLOSURE_TOOL=$JBASE_HOME/pombase-chado/script/relation-graph-chado-closure.pl
  export PERL5LIB=$POMBASE_CHADO/lib:$JBASE_HOME/chobo/lib/
  time nice -19 $JAPONICUS_BUILD/make-db $JBASE_HOME $DATE "$HOST" $USER $PASSWORD) || die "make-db failed"
+
+fi
 
 
 DB_DATE_VERSION=$DATE
@@ -114,9 +119,18 @@ echo loading pombe genes
 $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
     --organism-taxonid=4896 --uniquename-column=1 --name-column=3 --feature-type=gene \
     --product-column=5 --ignore-short-lines \
-    --transcript-so-name=transcript \
+    --transcript-so-name=mRNA --column-filter="7=protein coding gene" \
     "$HOST" $DB $USER $PASSWORD < /var/www/pombase/dumps/latest_build/misc/gene_IDs_names_products.tsv
 
+for so_type in ncRNA tRNA snoRNA rRNA snRNA
+do
+  $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
+      --organism-taxonid=4896 --uniquename-column=1 --name-column=3 \
+      --product-column=5 --ignore-short-lines \
+      --transcript-so-name=$so_type \
+      --column-filter="7=${so_type} gene" --feature-type=gene \
+     "$HOST" $DB $USER $PASSWORD < /var/www/pombase/dumps/latest_build/misc/gene_IDs_names_products.tsv
+done
 
 
 cd $LOG_DIR
