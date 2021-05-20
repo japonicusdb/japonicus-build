@@ -186,11 +186,11 @@ gzip -d < $CURRENT_GOA_GAF | rg '\ttaxon:(4897|402676)\t' |
        --assigned-by-filter=EnsemblFungi,GOC,RNAcentral,InterPro,UniProtKB,UniProt "$HOST" $DB $USER $PASSWORD
 
 
-echo load Compara orthologs
+echo load orthologs
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:26896847 --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
-  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/compara_japonicus_pombe_orthologs.txt 2>&1 | tee $LOG_DIR/$log_file.compara_japonicus_pombe_orthologs
+  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.pombe_orthologs
 
 
 echo transfer names and products from pombe to japonicus
