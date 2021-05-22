@@ -145,6 +145,11 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
     --feature-uniquename-column=1 --property-column=2 \
     "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/systematic_id_uniprot_mapping.tsv
 
+$POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
+    --property-name="uniprot_identifier" --organism-taxonid=4896 \
+    --feature-uniquename-column=1 --property-column=2 \
+    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/pombe_systematic_id_uniprot_mapping.tsv
+
 
 evidence_summary () {
   DB=$1
