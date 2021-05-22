@@ -88,25 +88,25 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG organisms \
 ##     "$HOST" $DB $USER $PASSWORD < $SOURCES/hgnc_complete_set.txt
 
 
-## echo loading protein coding genes from SGD data file
-## $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
-##     --organism-taxonid=4932 --uniquename-column=5 --name-column=6 \
-##     --product-column=4 \
-##     --column-filter="1=ORF,blocked_reading_frame,blocked reading frame" --feature-type=gene \
-##     --transcript-so-name=transcript \
-##     --feature-prop-from-column=sgd_identifier:3 \
-##     "$HOST" $DB $USER $PASSWORD < $SOURCES/sgd_yeastmine_genes.tsv
+echo loading protein coding genes from SGD data file
+$JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
+    --organism-taxonid=4932 --uniquename-column=5 --name-column=6 \
+    --product-column=4 \
+    --column-filter="1=ORF,blocked_reading_frame,blocked reading frame" --feature-type=gene \
+    --transcript-so-name=transcript \
+    --feature-prop-from-column=sgd_identifier:3 \
+    "$HOST" $DB $USER $PASSWORD < $SOURCES/sgd_yeastmine_genes.tsv
 
-## for so_type in ncRNA snoRNA
-## do
-##   echo loading $so_type genes from SGD data file
-##   $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
-##       --organism-taxonid=4932 --uniquename-column=5 --name-column=6 \
-##       --transcript-so-name=$so_type \
-##       --column-filter="1=${so_type} gene" --feature-type=gene \
-##       "$HOST" $DB $USER $PASSWORD < $SOURCES/sgd_yeastmine_genes.tsv
-## done
-## 
+for so_type in ncRNA snoRNA
+do
+  echo loading $so_type genes from SGD data file
+  $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
+      --organism-taxonid=4932 --uniquename-column=5 --name-column=6 \
+      --transcript-so-name=$so_type \
+      --column-filter="1=${so_type} gene" --feature-type=gene \
+      "$HOST" $DB $USER $PASSWORD < $SOURCES/sgd_yeastmine_genes.tsv
+done
+
 
 
 echo loading pombe genes
@@ -191,11 +191,18 @@ gzip -d < $CURRENT_GOA_GAF | rg '\ttaxon:(4897|402676)\t' |
        --assigned-by-filter=EnsemblFungi,GOC,RNAcentral,InterPro,UniProtKB,UniProt "$HOST" $DB $USER $PASSWORD
 
 
-echo load orthologs
+echo load pombe orthologs
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:26896847 --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
   "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.pombe_orthologs
+
+
+echo load cerevisiae orthologs
+
+$POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
+  --publication=PMID:26896847 --organism_1_taxonid=4897 --organism_2_taxonid=4932 \
+  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/cerevisiae_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.cerevisiae_orthologs
 
 
 echo transfer names and products from pombe to japonicus
