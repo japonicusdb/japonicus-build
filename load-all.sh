@@ -213,6 +213,18 @@ $JBASE_HOME/pombase-chado/script/pombase-process.pl \
   "$HOST" $DB $USER $PASSWORD
 
 
+echo transfer GO annotation from pombe
+
+curl https://curation.pombase.org/dumps/latest_build/pombase-latest.gaf.gz |
+    gzip -d |
+    $POMBASE_CHADO/script/pombase-file-process.pl $LOAD_CONFIG transfer-gaf-annotations \
+       --source-organism-taxonid=4896 --dest-organism-taxonid=4897 \
+       --evidence-codes-to-keep=EXP,IMP,IDA,IGI,ISM,ISO \
+       --ortholog-file=/home/kmr44/japonicus-curation/pombe_orthologs.tsv |
+    $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
+       --taxon-filter=4897 "$HOST" $DB $USER $PASSWORD
+
+
 refresh_views
 
 # run this before loading the Canto data because the Canto loader creates
