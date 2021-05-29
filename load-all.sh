@@ -138,6 +138,7 @@ $POMBASE_LEGACY/script/load-chado.pl --taxonid=4897 \
 
 $POMBASE_LEGACY/etc/process-log.pl $log_file
 
+PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
 
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
@@ -213,6 +214,8 @@ $JBASE_HOME/pombase-chado/script/pombase-process.pl \
   "$HOST" $DB $USER $PASSWORD
 
 
+PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
+
 echo transfer GO annotation from pombe
 
 curl --http1.1 https://curation.pombase.org/dumps/latest_build/pombase-latest.gaf.gz |
@@ -268,6 +271,7 @@ echo
 echo counts of assigned_by before filtering:
 assigned_by_summary $DB
 
+PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
 
 echo
 echo filtering redundant annotations - `date`
