@@ -245,8 +245,6 @@ refresh_views
 echo update out of date allele names
 $POMBASE_CHADO/script/pombase-process.pl $LOAD_CONFIG update-allele-names "$HOST" $DB $USER $PASSWORD
 
-echo change UniProtKB IDs in "with" feature_cvterprop rows to PomBase IDs
-$POMBASE_CHADO/script/pombase-process.pl $LOAD_CONFIG uniprot-ids-to-local "$HOST" $DB $USER $PASSWORD
 
 echo do GO term re-mapping
 $POMBASE_CHADO/script/pombase-process.pl $LOAD_CONFIG change-terms \
