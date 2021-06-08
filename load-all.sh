@@ -226,10 +226,10 @@ echo transfer GO annotation from pombe
 
 curl --http1.1 https://curation.pombase.org/dumps/latest_build/pombase-latest.gaf.gz |
     gzip -d |
-    $POMBASE_CHADO/script/pombase-file-process.pl $LOAD_CONFIG transfer-gaf-annotations \
+    $POMBASE_CHADO/script/pombase-process.pl $LOAD_CONFIG transfer-gaf-annotations \
        --source-organism-taxonid=4896 --dest-organism-taxonid=4897 \
-       --evidence-codes-to-ignore=ND \
-       --ortholog-file=$JBASE_HOME/japonicus-curation/compara_pombe_orthologs.tsv |
+       --evidence-codes-to-ignore=ND --terms-to-ignore="GO:0005515" \
+       "$HOST" $DB $USER $PASSWORD |
     $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
        --taxon-filter=4897 "$HOST" $DB $USER $PASSWORD
 
