@@ -141,6 +141,10 @@ $POMBASE_LEGACY/etc/process-log.pl $log_file
 PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
 
 
+$POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG names-and-products \
+    --dest-organism-taxonid=4897 \
+    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/names_and_products.tsv
+
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
     --property-name="uniprot_identifier" --organism-taxonid=4897 \
     --feature-uniquename-column=1 --property-column=2 \
