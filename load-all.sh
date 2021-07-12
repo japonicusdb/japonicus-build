@@ -274,7 +274,7 @@ CURATION_TOOL_DATA=$POMCUR/backups/japonicus-current.json
 echo
 echo load Canto data
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG canto-json \
-   --organism-taxonid=4897 --db-prefix=JaponicusDB \
+   --organism-taxonid=4897 --db-prefix=JaponicusDB --all-curation-is-community \
    "$HOST" $DB $USER $PASSWORD < $CURATION_TOOL_DATA 2>&1 | tee $LOG_DIR/$log_file.curation_tool_data
 
 echo annotation count after loading curation tool data:
