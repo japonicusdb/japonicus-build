@@ -222,6 +222,13 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/cerevisiae_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.cerevisiae_orthologs
 
 
+echo load human orthologs
+
+$POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
+  --publication=null --organism_1_taxonid=4897 --organism_2_taxonid=9606 \
+  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/human_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.human_orthologs
+
+
 echo transfer names and products from pombe to japonicus
 
 $JBASE_HOME/pombase-chado/script/pombase-process.pl \
