@@ -80,12 +80,12 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG organisms \
 #    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/svn-supporting-files/PB_references.txt
 
 
-## echo loading human genes
-## $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
-##     --organism-taxonid=9606 --uniquename-column=1 --name-column=2 --feature-type=gene \
-##     --transcript-so-name=transcript --product-column=3 \
-##     --ignore-lines-matching="^hgnc_id.symbol" --ignore-short-lines \
-##     "$HOST" $DB $USER $PASSWORD < $SOURCES/hgnc_complete_set.txt
+echo loading human genes
+$JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
+    --organism-taxonid=9606 --uniquename-column=1 --name-column=2 --feature-type=gene \
+    --transcript-so-name=transcript --product-column=3 \
+    --ignore-lines-matching="^hgnc_id.symbol" --ignore-short-lines \
+    "$HOST" $DB $USER $PASSWORD < $SOURCES/hgnc_complete_set.txt
 
 
 echo loading protein coding genes from SGD data file
