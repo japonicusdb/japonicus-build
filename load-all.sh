@@ -219,7 +219,7 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
 echo load manual pombe orthologs
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
-  --publication=PMID:21511999 --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
+  --publication=null --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
   "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/manual_pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.manual_pombe_orthologs
 
 
