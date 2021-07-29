@@ -56,8 +56,8 @@ POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
 
 
 DB_DATE_VERSION=$DATE
-BASE_DB=jbase-base-$DB_DATE_VERSION
-DB=jbase-build-$DB_DATE_VERSION
+BASE_DB=japonicusdb-base-$DB_DATE_VERSION
+DB=japonicusdb-build-$DB_DATE_VERSION
 
 createdb -T $BASE_DB $DB
 

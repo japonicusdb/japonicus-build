@@ -17,7 +17,7 @@ PASSWORD=$5
 
 SOURCES_DIR=$JBASE_HOME/sources
 
-DB=jbase-base-$DB_NAME_SUFFIX
+DB=japonicusdb-base-$DB_NAME_SUFFIX
 
 echo "building database: $DB on $HOST"
 
