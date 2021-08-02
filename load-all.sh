@@ -28,6 +28,8 @@ POMCUR=/var/pomcur
 SOURCES=$POMCUR/sources
 JAPONICUS_SOURCES=$POMCUR/japonicus_sources
 
+POMBASE_NIGHTLY=/var/www/pombase/dumps
+
 LOAD_CONFIG=$JAPONICUS_CONFIG/load-japonicus-chado.yaml
 MAIN_CONFIG=$JAPONICUS_CONFIG/japonicus_site_config.json
 
@@ -115,7 +117,7 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
     --organism-taxonid=4896 --uniquename-column=1 --name-column=3 --feature-type=gene \
     --product-column=5 --ignore-short-lines \
     --transcript-so-name=mRNA --column-filter="7=protein coding gene" \
-    "$HOST" $DB $USER $PASSWORD < /var/www/pombase/dumps/latest_build/misc/gene_IDs_names_products.tsv
+    "$HOST" $DB $USER $PASSWORD < $POMBASE_NIGHTLY/latest_build/misc/gene_IDs_names_products.tsv
 
 for so_type in ncRNA tRNA snoRNA rRNA snRNA
 do
@@ -124,7 +126,7 @@ do
       --product-column=5 --ignore-short-lines \
       --transcript-so-name=$so_type \
       --column-filter="7=${so_type} gene" --feature-type=gene \
-     "$HOST" $DB $USER $PASSWORD < /var/www/pombase/dumps/latest_build/misc/gene_IDs_names_products.tsv
+     "$HOST" $DB $USER $PASSWORD < $POMBASE_NIGHTLY/latest_build/misc/gene_IDs_names_products.tsv
 done
 
 
