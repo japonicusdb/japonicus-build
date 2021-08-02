@@ -560,7 +560,7 @@ ln -s $CURRENT_BUILD_DIR $DUMPS_DIR/latest_build
 
 IMAGE_NAME=japonicus/web:$DB_DATE_VERSION-prod
 
-docker service update --image=$IMAGE_NAME japonicus-dev
+docker service update --update-delay 0s --image=$IMAGE_NAME japonicus-1
 
 if [ $CHADO_CHECKS_STATUS=passed ]
 then
