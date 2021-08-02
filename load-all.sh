@@ -28,7 +28,9 @@ POMCUR=/var/pomcur
 SOURCES=$POMCUR/sources
 JAPONICUS_SOURCES=$POMCUR/japonicus_sources
 
-POMBASE_NIGHTLY=/var/www/pombase/dumps
+WWW_DIR=/var/www/pombase
+
+POMBASE_NIGHTLY=$WWW_DIR/dumps
 
 LOAD_CONFIG=$JAPONICUS_CONFIG/load-japonicus-chado.yaml
 MAIN_CONFIG=$JAPONICUS_CONFIG/japonicus_site_config.json
@@ -37,6 +39,7 @@ LOG_DIR=$JBASE_HOME/logs
 
 POMBASE_CHADO=$JBASE_HOME/pombase-chado
 POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
+
 
 (cd chobo/; git pull) || die "Failed to update Chobo"
 
@@ -342,7 +345,7 @@ fi
 echo Chado checks $CHADO_CHECKS_STATUS
 
 
-DUMPS_DIR=/var/www/pombase/japonicus_nightly
+DUMPS_DIR=$WWW_DIR/japonicus_nightly
 BUILDS_DIR=$DUMPS_DIR/builds
 CURRENT_BUILD_DIR=$BUILDS_DIR/$DB
 
