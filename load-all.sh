@@ -340,7 +340,7 @@ fi
 echo Chado checks $CHADO_CHECKS_STATUS
 
 
-DUMPS_DIR=$JBASE_HOME/outputs
+DUMPS_DIR=/var/www/pombase/japonicus
 BUILDS_DIR=$DUMPS_DIR/builds
 CURRENT_BUILD_DIR=$BUILDS_DIR/$DB
 
