@@ -19,5 +19,5 @@ DATE=`date +'%Y-%m-%d'`
 
  ./japonicus-build/load-all.sh 'localhost' $DATE kmr44 kmr44 v62 2017-01-30 ) 2>&1 |
    tee /var/www/pombase/japonicus_nightly/builds/load-logs/$DATE.log |
-   tee -a /var/pomcur/logs/nightly_load.log
+   tee -a /var/pomcur/logs/nightly_japonicus_load.log
 
