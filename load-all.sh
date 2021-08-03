@@ -197,7 +197,7 @@ evidence_summary $DB
 CURRENT_GOA_GAF=$JBASE_HOME/sources/goa_gene_association_japonicus.tsv.gz
 
 echo load GOA annotation
-gzip -d < $CURRENT_GOA_GAF | rg '\ttaxon:(4897|402676)\t' |
+gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
     $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
        --taxon-filter=4897 \
        --use-only-first-with-id --term-id-filter-filename=$SOURCES/pombe-embl/goa-load-fixes/filtered_GO_IDs \
