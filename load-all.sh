@@ -313,7 +313,13 @@ PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
 echo
 echo filtering redundant annotations - `date`
 $JBASE_HOME/pombase-chado/script/pombase-process.pl $LOAD_CONFIG go-filter "$HOST" $DB $USER $PASSWORD
-echo done filtering - `date`
+echo done GO filtering - `date`
+
+
+echo
+echo filtering redundant annotations - `date`
+$JBASE_HOME/pombase-chado/script/pombase-process.pl $LOAD_CONFIG go-filter-with-not "$HOST" $DB $USER $PASSWORD
+echo done filtering using NOT annotations - `date`
 
 
 
