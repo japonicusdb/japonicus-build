@@ -257,7 +257,7 @@ PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
 
 echo transfer GO annotation from pombe
 
-curl --http1.1 https://curation.pombase.org/dumps/latest_build/pombase-latest.gaf.gz |
+curl -s --http1.1 https://curation.pombase.org/dumps/latest_build/pombase-latest.gaf.gz |
     gzip -d |
     $POMBASE_CHADO/script/pombase-process.pl $LOAD_CONFIG transfer-gaf-annotations \
        --source-organism-taxonid=4896 --dest-organism-taxonid=4897 \
