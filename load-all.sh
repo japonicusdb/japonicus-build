@@ -526,8 +526,8 @@ sub_query="(select
  parent_cv, cvterm rel_type where fc.cvterm_id = t.cvterm_id and
  term_cv.cv_id = t.cv_id and t.cvterm_id = subject_id and
  parent_term.cvterm_id = object_id and parent_term.cv_id =
- parent_cv.cv_id and term_cv.name = 'PomBase annotation extension
- terms' and rel.type_id = rel_type.cvterm_id and rel_type.name =
+ parent_cv.cv_id and term_cv.name = 'PomBase annotation extension terms'
+ and rel.type_id = rel_type.cvterm_id and rel_type.name =
  'is_a' and fc.feature_cvterm_id in (select feature_cvterm_id from
  feature_cvtermprop where type_id in (select cvterm_id from cvterm
  where name = 'canto_session'))) as sub"
