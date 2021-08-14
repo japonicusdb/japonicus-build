@@ -238,7 +238,7 @@ $JAPONICUS_BUILD/project-pombe-orthologs.pl \
     <(curl -s --http1.1 https://curation.pombase.org/dumps/latest_build/exports/pombe-cerevisiae-orthologs-with-systematic-ids.txt.gz | gzip -d) \
     <($POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG simple-orthologs --organism-taxon-id=4897 --other-organism-taxon-id=4896 "$HOST" $DB $USER $PASSWORD) |
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
-  --publication=null --organism_1_taxonid=4897 --organism_2_taxonid=4932 \
+  --publication=PMID:30321395 --organism_1_taxonid=4897 --organism_2_taxonid=4932 \
   "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.cerevisiae_orthologs_via_pombe
 
 
