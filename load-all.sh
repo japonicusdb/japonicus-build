@@ -202,14 +202,16 @@ gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
        --taxon-filter=4897 \
        --use-only-first-with-id --term-id-filter-filename=$SOURCES/pombe-embl/goa-load-fixes/filtered_GO_IDs \
        --with-filter-filename=$SOURCES/pombe-embl/goa-load-fixes/filtered_mappings \
-       --assigned-by-filter=EnsemblFungi,GOC,RNAcentral,InterPro,UniProtKB,UniProt "$HOST" $DB $USER $PASSWORD
+       --assigned-by-filter=EnsemblFungi,GOC,RNAcentral,InterPro,UniProtKB,UniProt "$HOST" $DB $USER $PASSWORD \
+       2>&1 | tee $LOG_DIR/$log_file.goa_gene_association_japonicus
 
 
 echo load manual annotation
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
     --taxon-filter=4897 \
     --assigned-by-filter=EnsemblFungi,GOC,RNAcentral,InterPro,UniProtKB,UniProt,JaponicusDB \
-    "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/manual_go_annotation.gaf
+    "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/manual_go_annotation.gaf \
+    2>&1 | tee $LOG_DIR/$log_file.manual_go_annotation
 
 
 echo load Compara pombe orthologs
