@@ -236,6 +236,7 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
 echo load cerevisiae orthologs
 
 # load via pombe orthologs first
+echo "  via pombe"
 $JAPONICUS_BUILD/project-pombe-orthologs.pl \
     <(curl -s --http1.1 https://curation.pombase.org/dumps/latest_build/exports/pombe-cerevisiae-orthologs-with-systematic-ids.txt.gz | gzip -d) \
     <($POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG simple-orthologs --organism-taxon-id=4897 --other-organism-taxon-id=4896 "$HOST" $DB $USER $PASSWORD) |
@@ -279,7 +280,7 @@ curl -s --http1.1 https://curation.pombase.org/dumps/latest_build/pombase-latest
        "$HOST" $DB $USER $PASSWORD |
     $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
        --taxon-filter=4897 "$HOST" $DB $USER $PASSWORD \
-       2>&1 tee $LOG_DIR/$log_file.transfer_pombe_go_annotation
+       2>&1 | tee $LOG_DIR/$log_file.transfer_pombe_go_annotation
 
 
 refresh_views
