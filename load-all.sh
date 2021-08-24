@@ -243,7 +243,7 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:29761456 --organism_1_taxonid=4897 --organism_2_taxonid=4932 \
   "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.cerevisiae_orthologs_via_pombe
 
-
+echo "  from Compara"
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:26896847 --organism_1_taxonid=4897 --organism_2_taxonid=4932 \
   "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/cerevisiae_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.compara_cerevisiae_orthologs
@@ -264,7 +264,7 @@ echo transfer names and products from pombe to japonicus
 $JBASE_HOME/pombase-chado/script/pombase-process.pl \
   $LOAD_CONFIG transfer-names-and-products \
   --source-organism-taxonid=4896 --dest-organism-taxonid=4897 \
-  "$HOST" $DB $USER $PASSWORD
+  "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.transfer_names_and_products
 
 
 PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
@@ -278,7 +278,8 @@ curl -s --http1.1 https://curation.pombase.org/dumps/latest_build/pombase-latest
        --evidence-codes-to-ignore=ND --terms-to-ignore="GO:0005515" \
        "$HOST" $DB $USER $PASSWORD |
     $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
-       --taxon-filter=4897 "$HOST" $DB $USER $PASSWORD
+       --taxon-filter=4897 "$HOST" $DB $USER $PASSWORD \
+       2>&1 tee $LOG_DIR/$log_file.transfer_pombe_go_annotation
 
 
 refresh_views
