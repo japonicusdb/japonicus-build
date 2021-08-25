@@ -197,7 +197,7 @@ evidence_summary $DB
 pg_dump $DB | gzip -9 > /tmp/japonicus-chado-10-pre-goa.dump.gz
 
 
-CURRENT_GOA_GAF=$JBASE_HOME/sources/goa_gene_association_japonicus.tsv.gz
+CURRENT_GOA_GAF=$SOURCES/gene_association.goa_uniprot.gz
 
 echo load GOA annotation
 gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
