@@ -194,6 +194,9 @@ echo annotation evidence counts before loading
 evidence_summary $DB
 
 
+pg_dump $DB | gzip -9 > /tmp/japonicus-chado-10-pre-goa.dump.gz
+
+
 CURRENT_GOA_GAF=$JBASE_HOME/sources/goa_gene_association_japonicus.tsv.gz
 
 echo load GOA annotation
@@ -206,12 +209,18 @@ gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
        2>&1 | tee $LOG_DIR/$log_file.goa_gene_association_japonicus
 
 
+pg_dump $DB | gzip -9 > /tmp/japonicus-chado-20-after-goa.dump.gz
+
+
 echo load manual annotation
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
     --taxon-filter=4897 \
     --assigned-by-filter=EnsemblFungi,GOC,RNAcentral,InterPro,UniProtKB,UniProt,JaponicusDB \
     "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/manual_go_annotation.gaf \
     2>&1 | tee $LOG_DIR/$log_file.manual_go_annotation
+
+
+pg_dump $DB | gzip -9 > /tmp/japonicus-chado-30-after-manual-annotation.dump.gz
 
 
 echo load Compara pombe orthologs
@@ -244,6 +253,10 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:29761456 --organism_1_taxonid=4897 --organism_2_taxonid=4932 \
   "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.cerevisiae_orthologs_via_pombe
 
+$POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG simple-orthologs \
+  --organism-taxon-id=4897 --other-organism-taxon-id=4932 \
+  "$HOST" $DB $USER $PASSWORD > /tmp/japonicus_cerevisiae_orthologs_via_pombe.tsv
+
 echo "  from Compara"
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:26896847 --organism_1_taxonid=4897 --organism_2_taxonid=4932 \
@@ -268,6 +281,10 @@ $JBASE_HOME/pombase-chado/script/pombase-process.pl \
   "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.transfer_names_and_products
 
 
+pg_dump $DB | gzip -9 > /tmp/japonicus-chado-40-after-orthologs-and-names.dump.gz
+
+
+
 PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
 
 echo transfer GO annotation from pombe
@@ -283,6 +300,8 @@ curl -s --http1.1 https://curation.pombase.org/dumps/latest_build/pombase-latest
        2>&1 | tee $LOG_DIR/$log_file.transfer_pombe_go_annotation
 
 
+pg_dump $DB | gzip -9 > /tmp/japonicus-chado-50-after-pombe-go-annotation.gz
+
 refresh_views
 
 # run this before loading the Canto data because the Canto loader creates
@@ -292,6 +311,8 @@ refresh_views
 $JBASE_HOME/pombase-chado/script/pombase-process.pl \
     $LOAD_CONFIG add-reciprocal-ipi-annotations \
     --organism-taxonid=4897 "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.add_reciprocal_ipi_annotations
+
+pg_dump $DB | gzip -9 > /tmp/japonicus-chado-60-after-reciprocal-ipi-annotations.gz
 
 
 PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
@@ -319,6 +340,8 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG canto-json \
 echo annotation count after loading curation tool data:
 evidence_summary $DB
 
+pg_dump $DB | gzip -9 > /tmp/japonicus-chado-70-after-canto-data.gz
+
 
 echo
 echo counts of assigned_by before filtering:
@@ -338,6 +361,7 @@ $JBASE_HOME/pombase-chado/script/pombase-process.pl $LOAD_CONFIG go-filter-with-
 echo done filtering using NOT annotations - `date`
 
 
+pg_dump $DB | gzip -9 > /tmp/japonicus-chado-80-go-filtering.gz
 
 echo
 echo counts of assigned_by after filtering:
