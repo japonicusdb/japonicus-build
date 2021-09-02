@@ -409,6 +409,11 @@ $POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG orthologs --organism-taxon-
 echo starting gaf export at `date`
 $POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG gaf --organism-taxon-id=4897 "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.gaf.gz
 
+echo starting phaf export at `date`
+$POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG phaf --organism-taxon-id=4897 "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.phaf.gz
+
+echo starting modifications export at `date`
+$POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG modifications --organism-taxon-id=4897 "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.modifications.gz
 
 psql $DB -t --no-align -c "
 SELECT uniquename FROM pub WHERE uniquename LIKE 'PMID:%'
