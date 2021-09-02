@@ -621,6 +621,40 @@ if [ $CHADO_CHECKS_STATUS=passed ]
 then
     rm -f $DUMPS_DIR/nightly_update
     ln -s $CURRENT_BUILD_DIR $DUMPS_DIR/nightly_update
+
+    WWW_JAPONICUS_DIR=/var/www/www-japonicusdb
+    WWW_DATA_DIR=$WWW_JAPONICUS_DIR/data
+
+    cp $CURRENT_BUILD_DIR/misc/gene_IDs_names.tsv          $WWW_DATA_DIR/names_and_identifiers/
+    cp $CURRENT_BUILD_DIR/misc/gene_IDs_names_products.tsv $WWW_DATA_DIR/names_and_identifiers/
+    cp $CURRENT_BUILD_DIR/misc/sysID2product.tsv           $WWW_DATA_DIR/names_and_identifiers/
+    cp $CURRENT_BUILD_DIR/misc/sysID2product.rna.tsv       $WWW_DATA_DIR/names_and_identifiers/
+    cp $CURRENT_BUILD_DIR/misc/Complex_annotation.tsv      $WWW_DATA_DIR/annotations/Gene_ontology/GO_complexes/Complex_annotation.tsv
+
+    gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_annotation_data_taxonid_4896.tsv > $WWW_DATA_DIR/annotations/Gene_ontology/pombase.gpad.gz
+    gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_information_taxonid_4896.tsv     > $WWW_DATA_DIR/annotations/Gene_ontology/pombase.gpi.gz
+
+    cp $CURRENT_BUILD_DIR/misc/transmembrane_domain_coords_and_seqs.tsv    $WWW_DATA_DIR/Protein_data/transmembrane_domain_coords_and_seqs.tsv
+
+    cp $CURRENT_BUILD_DIR/fasta/feature_sequences/cds+introns+utrs.fa.gz   $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/cds+introns+utrs.fa.gz
+    cp $CURRENT_BUILD_DIR/fasta/feature_sequences/cds+introns.fa.gz        $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/cds+introns.fa.gz
+    cp $CURRENT_BUILD_DIR/fasta/feature_sequences/cds.fa.gz                $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/cds.fa.gz
+    cp $CURRENT_BUILD_DIR/fasta/feature_sequences/introns_within_cds.fa.gz $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/introns_within_cds.fa.gz
+    cp $CURRENT_BUILD_DIR/fasta/feature_sequences/five_prime_utrs.fa.gz    $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/UTR/5UTR.fa.gz
+    cp $CURRENT_BUILD_DIR/fasta/feature_sequences/three_prime_utrs.fa.gz   $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/UTR/3UTR.fa.gz
+    cp $CURRENT_BUILD_DIR/fasta/feature_sequences/peptide.fa.gz            $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/peptide.fa.gz
+
+    (cd $CURRENT_BUILD_DIR/gff
+    for f in *.gff3
+    do
+        gzip -9 < $f > $WWW_DATA_DIR/genome_sequence_and_features/gff3/$f.gz
+    done)
+
+    cp $CURRENT_BUILD_DIR/$DB.human-orthologs.txt.gz       $WWW_DATA_DIR/orthologs/human-orthologs.txt.gz
+    cp $CURRENT_BUILD_DIR/$DB.pombe-orthologs.txt.gz       $WWW_DATA_DIR/orthologs/human-orthologs.txt.gz
+    cp $CURRENT_BUILD_DIR/$DB.modifications.gz             $WWW_DATA_DIR/annotations/modifications/pombase-chado.modifications.gz
+    cp $CURRENT_BUILD_DIR/$DB.phaf.gz                      $WWW_DATA_DIR/annotations/Phenotype_annotations/phenotype_annotations.pombase.phaf.gz
+
 fi
 
 date
