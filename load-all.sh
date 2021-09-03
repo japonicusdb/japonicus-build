@@ -631,8 +631,8 @@ then
     cp $CURRENT_BUILD_DIR/misc/sysID2product.rna.tsv       $WWW_DATA_DIR/names_and_identifiers/
     cp $CURRENT_BUILD_DIR/misc/Complex_annotation.tsv      $WWW_DATA_DIR/annotations/Gene_ontology/GO_complexes/Complex_annotation.tsv
 
-    gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_annotation_data_taxonid_4897.tsv > $WWW_DATA_DIR/annotations/Gene_ontology/pombase.gpad.gz
-    gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_information_taxonid_4897.tsv     > $WWW_DATA_DIR/annotations/Gene_ontology/pombase.gpi.gz
+    gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_annotation_data_taxonid_4897.tsv > $WWW_DATA_DIR/annotations/Gene_ontology/japonicusdb.gpad.gz
+    gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_information_taxonid_4897.tsv     > $WWW_DATA_DIR/annotations/Gene_ontology/japonicusdb.gpi.gz
 
     cp $CURRENT_BUILD_DIR/misc/transmembrane_domain_coords_and_seqs.tsv    $WWW_DATA_DIR/Protein_data/transmembrane_domain_coords_and_seqs.tsv
 
@@ -652,8 +652,8 @@ then
 
     cp $CURRENT_BUILD_DIR/$DB.japonicus-human-orthologs.txt.gz       $WWW_DATA_DIR/orthologs/japonicus-human-orthologs.txt.gz
     cp $CURRENT_BUILD_DIR/$DB.japonicus-pombe-orthologs.txt.gz       $WWW_DATA_DIR/orthologs/japonicus-pombe-orthologs.txt.gz
-    cp $CURRENT_BUILD_DIR/$DB.modifications.gz             $WWW_DATA_DIR/annotations/modifications/pombase-chado.modifications.gz
-    cp $CURRENT_BUILD_DIR/$DB.phaf.gz                      $WWW_DATA_DIR/annotations/Phenotype_annotations/phenotype_annotations.pombase.phaf.gz
+    cp $CURRENT_BUILD_DIR/$DB.modifications.gz             $WWW_DATA_DIR/annotations/modifications/japonicusdb-chado.modifications.gz
+    cp $CURRENT_BUILD_DIR/$DB.phaf.gz                      $WWW_DATA_DIR/annotations/Phenotype_annotations/phenotype_annotations.japonicusdb.phaf.gz
 
 fi
 
