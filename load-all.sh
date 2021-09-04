@@ -216,7 +216,7 @@ echo load manual annotation
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
     --taxon-filter=4897 \
     --assigned-by-filter=EnsemblFungi,GOC,RNAcentral,InterPro,UniProtKB,UniProt,JaponicusDB \
-    "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/manual_go_annotation.gaf \
+    "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/Gene_ontology/manual_go_annotation.gaf \
     2>&1 | tee $LOG_DIR/$log_file.manual_go_annotation
 
 
