@@ -625,10 +625,13 @@ then
     WWW_JAPONICUS_DIR=/var/www/www-japonicusdb
     WWW_DATA_DIR=$WWW_JAPONICUS_DIR/data
 
+    cp $JAPONICUS_CURATION/systematic_id_uniprot_mapping.tsv $WWW_DATA_DIR/names_and_identifiers/JaponicusDB2UniProt.tsv
+
     cp $CURRENT_BUILD_DIR/misc/gene_IDs_names.tsv          $WWW_DATA_DIR/names_and_identifiers/
     cp $CURRENT_BUILD_DIR/misc/gene_IDs_names_products.tsv $WWW_DATA_DIR/names_and_identifiers/
     cp $CURRENT_BUILD_DIR/misc/sysID2product.tsv           $WWW_DATA_DIR/names_and_identifiers/
     cp $CURRENT_BUILD_DIR/misc/sysID2product.rna.tsv       $WWW_DATA_DIR/names_and_identifiers/
+
     cp $CURRENT_BUILD_DIR/misc/Complex_annotation.tsv      $WWW_DATA_DIR/annotations/Gene_ontology/GO_complexes/Complex_annotation.tsv
 
     gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_annotation_data_taxonid_4897.tsv > $WWW_DATA_DIR/annotations/Gene_ontology/japonicusdb.gpad.gz
