@@ -637,7 +637,10 @@ then
     gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_annotation_data_taxonid_4897.tsv > $WWW_DATA_DIR/annotations/Gene_ontology/japonicusdb.gpad.gz
     gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_information_taxonid_4897.tsv     > $WWW_DATA_DIR/annotations/Gene_ontology/japonicusdb.gpi.gz
 
-    cp $CURRENT_BUILD_DIR/misc/transmembrane_domain_coords_and_seqs.tsv    $WWW_DATA_DIR/Protein_data/transmembrane_domain_coords_and_seqs.tsv
+    cp $CURRENT_BUILD_DIR/misc/transmembrane_domain_coords_and_seqs.tsv  $WWW_DATA_DIR/Protein_data/
+    cp $CURRENT_BUILD_DIR/misc/aa_composition.tsv                        $WWW_DATA_DIR/Protein_data/
+    cp $CURRENT_BUILD_DIR/misc/PeptideStats.tsv                          $WWW_DATA_DIR/Protein_data/
+    cp $CURRENT_BUILD_DIR/misc/ProteinFeatures.tsv                       $WWW_DATA_DIR/Protein_data/Protein_Features.tsv
 
     cp $CURRENT_BUILD_DIR/fasta/feature_sequences/cds+introns+utrs.fa.gz   $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/cds+introns+utrs.fa.gz
     cp $CURRENT_BUILD_DIR/fasta/feature_sequences/cds+introns.fa.gz        $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/cds+introns.fa.gz
