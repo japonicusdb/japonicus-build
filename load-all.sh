@@ -617,8 +617,8 @@ IMAGE_NAME=japonicus/web:$DB_DATE_VERSION-prod
 
 docker service update --update-delay 0s --image=$IMAGE_NAME japonicus-1
 
-if [ $CHADO_CHECKS_STATUS=passed ]
-then
+#if [ $CHADO_CHECKS_STATUS=passed ]
+#then
     rm -f $DUMPS_DIR/nightly_update
     ln -s $CURRENT_BUILD_DIR $DUMPS_DIR/nightly_update
 
@@ -661,6 +661,6 @@ then
     cp $CURRENT_BUILD_DIR/$DB.modifications.gz             $WWW_DATA_DIR/annotations/modifications/japonicusdb-chado.modifications.gz
     cp $CURRENT_BUILD_DIR/$DB.phaf.gz                      $WWW_DATA_DIR/annotations/Phenotype_annotations/phenotype_annotations.japonicusdb.phaf.gz
 
-fi
+#fi
 
 date
