@@ -650,6 +650,8 @@ docker service update --update-delay 0s --image=$IMAGE_NAME japonicus-1
     cp $CURRENT_BUILD_DIR/fasta/feature_sequences/three_prime_utrs.fa.gz   $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/UTR/3UTR.fa.gz
     cp $CURRENT_BUILD_DIR/fasta/feature_sequences/peptide.fa.gz            $WWW_DATA_DIR/genome_sequence_and_features/feature_sequences/peptide.fa.gz
 
+    cp $CURRENT_BUILD_DIR/fasta/chromosomes/*.gz      $WWW_DATA_DIR/genome_sequence_and_features/genome_sequence/
+
     (cd $CURRENT_BUILD_DIR/gff
     for f in *.gff3
     do
