@@ -637,6 +637,9 @@ docker service update --update-delay 0s --image=$IMAGE_NAME japonicus-1
     gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_annotation_data_taxonid_4897.tsv > $WWW_DATA_DIR/annotations/Gene_ontology/japonicusdb.gpad.gz
     gzip -9 < $CURRENT_BUILD_DIR/misc/gene_product_information_taxonid_4897.tsv     > $WWW_DATA_DIR/annotations/Gene_ontology/japonicusdb.gpi.gz
 
+    gzip -9 < $CURRENT_BUILD_DIR/misc/go_style_gaf.tsv                              > $WWW_DATA_DIR/annotations/Gene_ontology/gene_association_2-2.japonicusdb.gz
+    gzip -9 < $CURRENT_BUILD_DIR/misc/pombase_style_gaf.tsv                         > $WWW_DATA_DIR/annotations/Gene_ontology/gene_association_2-1.japonicusdb.gz
+
     cp $CURRENT_BUILD_DIR/misc/transmembrane_domain_coords_and_seqs.tsv  $WWW_DATA_DIR/Protein_data/
     cp $CURRENT_BUILD_DIR/misc/aa_composition.tsv                        $WWW_DATA_DIR/Protein_data/
     cp $CURRENT_BUILD_DIR/misc/PeptideStats.tsv                          $WWW_DATA_DIR/Protein_data/
