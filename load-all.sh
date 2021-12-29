@@ -138,7 +138,7 @@ log_file=log.`date +'%Y-%m-%d-%H-%M-%S'`
 $POMBASE_LEGACY/script/load-chado.pl --taxonid=4897 \
   --gene-ex-qualifiers $JAPONICUS_CONFIG/gene_ex_qualifiers \
   $LOAD_CONFIG \
-  "$HOST" $DB $USER $PASSWORD $JBASE_HOME/japonicus-curation/contigs/*.contig 2>&1 | tee $log_file || exit 1
+  "$HOST" $DB $USER $PASSWORD $JAPONICUS_CURATION/contigs/*.contig 2>&1 | tee $log_file || exit 1
 
 
 $POMBASE_LEGACY/etc/process-log.pl $log_file
@@ -149,19 +149,19 @@ PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
 echo loading names_and_products.tsv
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG names-and-products \
     --dest-organism-taxonid=4897 \
-    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/names_and_products.tsv
+    "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/names_and_products.tsv
 
 
 echo loading systematic_id_uniprot_mapping.tsv
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
     --property-name="uniprot_identifier" --organism-taxonid=4897 \
     --feature-uniquename-column=1 --property-column=2 \
-    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/systematic_id_uniprot_mapping.tsv
+    "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/systematic_id_uniprot_mapping.tsv
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
     --property-name="uniprot_identifier" --organism-taxonid=4896 \
     --feature-uniquename-column=1 --property-column=2 \
-    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/pombe_systematic_id_uniprot_mapping.tsv
+    "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/pombe_systematic_id_uniprot_mapping.tsv
 
 
 evidence_summary () {
@@ -227,19 +227,19 @@ echo load Compara pombe orthologs
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:26896847 --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
-  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/compara_pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.compara_pombe_orthologs
+  "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/compara_pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.compara_pombe_orthologs
 
 echo load Rhind pombe orthologs
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:21511999 --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
-  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/rhind_pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.rhind_pombe_orthologs
+  "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/rhind_pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.rhind_pombe_orthologs
 
 echo load manual pombe orthologs
 
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=null --organism_1_taxonid=4897 --organism_2_taxonid=4896 \
-  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/manual_pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.manual_pombe_orthologs
+  "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/manual_pombe_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.manual_pombe_orthologs
 
 
 echo load cerevisiae orthologs
@@ -260,7 +260,7 @@ $POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG simple-orthologs \
 echo "  from Compara"
 $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG orthologs \
   --publication=PMID:26896847 --organism_1_taxonid=4897 --organism_2_taxonid=4932 \
-  "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/japonicus-curation/cerevisiae_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.compara_cerevisiae_orthologs
+  "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/cerevisiae_orthologs.tsv 2>&1 | tee $LOG_DIR/$log_file.compara_cerevisiae_orthologs
 
 
 echo load human orthologs
