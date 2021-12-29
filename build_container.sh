@@ -14,6 +14,7 @@ container_dir=.
 (cd pombase-python-web; git pull)
 (cd japonicus-build; git pull)
 (cd japonicus-config; git pull)
+(cd curation; git pull)
 
 (cd pombase-website; cp src/japonicus/index.html src/)
 (cd pombase-website/src/assets
