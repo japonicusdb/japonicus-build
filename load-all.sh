@@ -21,7 +21,7 @@ die() {
 JBASE_HOME=`pwd`
 
 JAPONICUS_BUILD=$JBASE_HOME/japonicus-build
-JAPONICUS_CURATION=$JBASE_HOME/japonicus-curation
+JAPONICUS_CURATION=$JBASE_HOME/curation
 JAPONICUS_CONFIG=$JBASE_HOME/japonicus-config
 
 POMCUR=/var/pomcur
@@ -49,7 +49,7 @@ POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
 (cd pombase-website; git pull) || die "Failed to update pombase-website"
 
 (cd $JAPONICUS_BUILD; git pull) || die "can't update japonicus-build"
-(cd $JAPONICUS_CURATION; git pull) || die "can't update japonicus-curation"
+(cd $JAPONICUS_CURATION; git pull) || die "can't update $JAPONICUS_CURATION"
 (cd $JAPONICUS_CONFIG; git pull) || die "can't update japonicus-config"
 
 
