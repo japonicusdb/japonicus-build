@@ -378,6 +378,11 @@ echo query PubMed for publication details, then store
 $POMBASE_CHADO/script/pubmed_util.pl $LOAD_CONFIG \
   "$HOST" $DB $USER $PASSWORD --add-missing-fields 2>&1 | tee $LOG_DIR/$log_file.pubmed_query
 
+
+echo
+echo loading finished
+
+
 PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
 refresh_views
 
@@ -428,7 +433,6 @@ SELECT uniquename FROM pub WHERE uniquename LIKE 'PMID:%'
 
 cp $LOG_DIR/$log_file.* $CURRENT_BUILD_DIR/logs/
 
-refresh_views
 
 (
 echo extension relation counts:
@@ -579,8 +583,6 @@ psql $DB -c "select count(distinct fc_id), cv_name from $sub_query group by cv_n
 psql $DB -c "select count(distinct fc_id) as total from $sub_query;"
 
  ) > $CURRENT_BUILD_DIR/logs/$log_file.annotation_counts_by_cv
-
-refresh_views
 
 
 $POMCUR/bin/pombase-chado-json -c $MAIN_CONFIG \
