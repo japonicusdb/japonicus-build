@@ -619,7 +619,12 @@ ln -s $CURRENT_BUILD_DIR $DUMPS_DIR/latest_build
 
 IMAGE_NAME=japonicus/web:$DB_DATE_VERSION-prod
 
+# temporarily add another replica so so have no downtime when we update
+docker service update --replicas 2 japonicus-1
+sleep 60
 docker service update --update-delay 0s --image=$IMAGE_NAME japonicus-1
+sleep 60
+docker service update --replicas 1 japonicus-1
 
 #if [ $CHADO_CHECKS_STATUS=passed ]
 #then
