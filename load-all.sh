@@ -412,6 +412,7 @@ mkdir -p $CURRENT_BUILD_DIR/exports
 echo starting orthologs export at `date`
 $POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG orthologs --organism-taxon-id=4897 --other-organism-taxon-id=4896 --sensible-ortholog-direction "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.japonicus-pombe-orthologs.txt.gz
 $POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG orthologs --organism-taxon-id=4897 --other-organism-taxon-id=9606 --sensible-ortholog-direction "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.japonicus-human-orthologs.txt.gz
+$POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG orthologs --organism-taxon-id=4897 --other-organism-taxon-id=4932 --other-organism-field-name=uniquename --sensible-ortholog-direction "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.japonicus-cerevisiae-orthologs.txt.gz
 
 echo starting gaf export at `date`
 $POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG gaf --organism-taxon-id=4897 "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.gaf.gz
@@ -672,6 +673,7 @@ docker service update --replicas 1 japonicus-1
 
     cp $CURRENT_BUILD_DIR/$DB.japonicus-human-orthologs.txt.gz       $WWW_DATA_DIR/orthologs/japonicus-human-orthologs.txt.gz
     cp $CURRENT_BUILD_DIR/$DB.japonicus-pombe-orthologs.txt.gz       $WWW_DATA_DIR/orthologs/japonicus-pombe-orthologs.txt.gz
+    cp $CURRENT_BUILD_DIR/$DB.japonicus-cerevisiae-orthologs.txt.gz  $WWW_DATA_DIR/orthologs/japonicus-cerevisiae-orthologs.txt.gz
     cp $CURRENT_BUILD_DIR/$DB.modifications.gz             $WWW_DATA_DIR/annotations/modifications/japonicusdb-chado.modifications.gz
     cp $CURRENT_BUILD_DIR/$DB.phaf.gz                      $WWW_DATA_DIR/annotations/Phenotype_annotations/phenotype_annotations.japonicusdb.phaf.gz
 
