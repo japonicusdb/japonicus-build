@@ -410,7 +410,7 @@ mkdir -p $CURRENT_BUILD_DIR/exports
 (
 
 echo starting orthologs export at `date`
-$POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG orthologs --organism-taxon-id=4897 --other-organism-taxon-id=4896 --sensible-ortholog-direction "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.japonicus-pombe-orthologs.txt.gz
+$POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG orthologs --organism-taxon-id=4897 --other-organism-taxon-id=4896 --other-organism-field-name=uniquename --other-organism-field-name=uniquename --sensible-ortholog-direction "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.japonicus-pombe-orthologs.txt.gz
 $POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG orthologs --organism-taxon-id=4897 --other-organism-taxon-id=9606 --sensible-ortholog-direction "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.japonicus-human-orthologs.txt.gz
 $POMBASE_CHADO/script/pombase-export.pl $LOAD_CONFIG orthologs --organism-taxon-id=4897 --other-organism-taxon-id=4932 --other-organism-field-name=uniquename --sensible-ortholog-direction "$HOST" $DB $USER $PASSWORD | gzip -9 > $CURRENT_BUILD_DIR/$DB.japonicus-cerevisiae-orthologs.txt.gz
 
