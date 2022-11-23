@@ -679,4 +679,17 @@ docker service update --replicas 1 japonicus-1
 
 #fi
 
+cat > $POMCUR/apps/japonicus/canto_chado.yaml <<EOF
+
+Model::ChadoModel:
+  connect_info:
+    - "dbi:Pg:dbname=$DB;host=localhost"
+    - japonicus
+    - japonicus
+  schema_class: Canto::ChadoDB
+
+EOF
+
+echo finished building: $DB
+
 date
