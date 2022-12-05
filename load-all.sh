@@ -18,6 +18,8 @@ die() {
   exit 1
 }
 
+DATE_VERSION=$DATE
+
 JBASE_HOME=`pwd`
 
 JAPONICUS_BUILD=$JBASE_HOME/japonicus-build
@@ -60,9 +62,8 @@ POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
  time nice -19 $JAPONICUS_BUILD/make-db $JBASE_HOME $DATE "$HOST" $USER $PASSWORD) || die "make-db failed"
 
 
-DB_DATE_VERSION=$DATE
-BASE_DB=japonicusdb-base-$DB_DATE_VERSION
-DB=japonicusdb-build-$DB_DATE_VERSION
+BASE_DB=japonicusdb-base-$DATE_VERSION
+DB=japonicusdb-build-$DATE_VERSION
 
 createdb -T $BASE_DB $DB
 
@@ -137,7 +138,7 @@ cd $LOG_DIR
 log_file=log.`date +'%Y-%m-%d-%H-%M-%S'`
 $POMBASE_LEGACY/script/load-chado.pl --taxonid=4897 \
   --gene-ex-qualifiers $JAPONICUS_CONFIG/gene_ex_qualifiers \
-  $LOAD_CONFIG \
+  $LOAD_CONFIG $DATE_VERSION \
   "$HOST" $DB $USER $PASSWORD $JAPONICUS_CURATION/contigs/*.contig 2>&1 | tee $log_file || exit 1
 
 
@@ -616,9 +617,9 @@ ln -s $CURRENT_BUILD_DIR $DUMPS_DIR/latest_build
 (cd $JBASE_HOME/container_build
  (cd japonicus-config && git pull)
  cp -f japonicus-config/japonicus_site_config.json main_config.json
- nice -10 $JAPONICUS_BUILD/build_container.sh $DB_DATE_VERSION $DUMPS_DIR/latest_build)
+ nice -10 $JAPONICUS_BUILD/build_container.sh $DATE_VERSION $DUMPS_DIR/latest_build)
 
-IMAGE_NAME=japonicus/web:$DB_DATE_VERSION-prod
+IMAGE_NAME=japonicus/web:$DATE_VERSION-prod
 
 # temporarily add another replica so so have no downtime when we update
 docker service update --replicas 2 japonicus-1
