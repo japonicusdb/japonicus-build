@@ -601,6 +601,8 @@ cp $LOG_DIR/$log_file.web-json-write $CURRENT_BUILD_DIR/logs/
 
 DB_BASE_NAME=`echo $DB | sed 's/-v[0-9]$//'`
 
+zstd -9q --rm $CURRENT_BUILD_DIR/api_maps.sqlite3
+
 
 cp $LOG_DIR/*.txt $CURRENT_BUILD_DIR/logs/
 
