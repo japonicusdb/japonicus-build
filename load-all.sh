@@ -305,6 +305,20 @@ gzip -d < $WWW_DIR/dumps/latest_build/pombase-latest.gaf.gz |
 
 pg_dump $DB | gzip -9 > /tmp/japonicus-chado-50-after-pombe-go-annotation.gz
 
+
+echo load PDBe IDs
+
+perl -ne '
+    ($id, $pdb_id, $taxon_id) = split /\t/;
+    print "$id\t$pdb_id\n" if $taxon_id == 4897;
+  ' < $SOURCES/pombe-embl/external_data/protein_structure/systematic_id_to_pdbe_mapping_japonicus.tsv |
+    sort | uniq |
+$POMBASE_CHADO/script/pombase-import.pl $POMBASE_LEGACY/load-pombase-chado.yaml generic-property \
+    --property-name="pdb_identifier" --organism-taxonid=4897 \
+    --feature-uniquename-column=1 --property-column=2 \
+    "$HOST" $DB $USER $PASSWORD
+
+
 refresh_views
 
 # run this before loading the Canto data because the Canto loader creates
@@ -593,6 +607,7 @@ $POMCUR/bin/pombase-chado-json -c $MAIN_CONFIG \
    -d $CURRENT_BUILD_DIR/ --go-eco-mapping=$SOURCES/gaf-eco-mapping.txt \
    -i $JAPONICUS_SOURCES/japonicus_domain_results.json \
    --pfam-data-file $JAPONICUS_CURATION/pfam_japonicus_protein_data.json \
+   --pdb-data-file $SOURCES/pombe-embl/external_data/protein_structure/systematic_id_to_pdbe_mapping_japonicus.tsv \
    2>&1 | tee $LOG_DIR/$log_file.web-json-write
 
 find $CURRENT_BUILD_DIR/fasta -name '*.fa' | xargs gzip -9f
