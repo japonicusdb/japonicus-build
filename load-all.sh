@@ -299,7 +299,7 @@ gzip -d < $WWW_DIR/dumps/latest_build/pombase-latest.gaf.gz |
        --evidence-codes-to-ignore=ND --terms-to-ignore="GO:0005515" \
        "$HOST" $DB $USER $PASSWORD |
     $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
-       --term-id-filter-filename=$JAPONICUS_CURATION/inferred_from_pombe_filtered_GO_IDs \
+       --term-id-filter-filename=$JAPONICUS_CURATION/japonicusdb_only_filtered_GO_IDs \
        --taxon-filter=4897 "$HOST" $DB $USER $PASSWORD \
        2>&1 | tee $LOG_DIR/$log_file.transfer_pombe_go_annotation
 
