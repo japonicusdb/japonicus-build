@@ -30,20 +30,6 @@ perl -pne 's/kmr44/japonicus/g' $POMBASE_LEGACY/pombase-chado-base.dump | psql -
               my $l2 = <>; if ($l2 =~ /-----/) { my $l3 = <>; if ($l3 =~ /^\s*\d+/) { my $l4 = <>; if ($l4 !~ /\(\d+ row/) { print } } }
             } else { print unless /^\s*$/ }'
 
-(
-    cd $SOURCES_DIR/pro
-    PRO_FILE=pro_nonreasoned.obo
-    PRO_URL=ftp://ftp.pir.georgetown.edu/databases/ontology/pro_obo/$PRO_FILE
-
-    if GET -i $PRO_FILE $PRO_URL > $PRO_FILE.new
-    then
-       mv $PRO_FILE.new $PRO_FILE
-    else
-      echo "no new $PRO_FILE to download"
-      rm -f $PRO_FILE.new
-    fi
-)
-
 (cd $SOURCES_DIR/; wget -N http://purl.obolibrary.org/obo/go/snapshot/go-basic.obo)
 
 (cd $SOURCES_DIR/; wget -N https://github.com/pombase/fypo/releases/latest/download/fypo-simple-pombase.obo)
