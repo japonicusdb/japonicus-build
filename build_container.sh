@@ -12,6 +12,7 @@ container_dir=.
 (cd pombase-chado; git pull)
 (cd pombase-chado-json; git pull)
 (cd pombase-python-web; git pull)
+(cd allele_qc; git pull)
 (cd japonicus-build; git pull)
 (cd japonicus-config; git pull)
 (cd curation; git pull)
