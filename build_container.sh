@@ -26,8 +26,6 @@ container_dir=.
 
 rsync -aL --delete-after --exclude '*~' pombase-chado/etc/docker-conf/ $container_dir/conf/
 
-rsync -acvPHS --delete-after pombase-chado-json/Rocket.toml $container_dir/
-
 rsync -acvPHS --delete-after $dump_dir/web-json $container_dir/
 rsync -acvPHS --delete-after $dump_dir/misc $container_dir/
 rsync -acvPHS --delete-after $dump_dir/gff $container_dir/
