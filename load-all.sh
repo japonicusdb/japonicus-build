@@ -50,9 +50,9 @@ POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
 
 (cd pombase-website; git pull) || die "Failed to update pombase-website"
 
-(cd $JAPONICUS_BUILD; git pull) || die "can't update japonicus-build"
+(cd $JAPONICUS_BUILD; git pull) || die "can't update $JAPONICUS_BUILD"
 (cd $JAPONICUS_CURATION; git pull) || die "can't update $JAPONICUS_CURATION"
-(cd $JAPONICUS_CONFIG; git pull) || die "can't update japonicus-config"
+(cd $JAPONICUS_CONFIG; git pull) || die "can't update $JAPONICUS_CONFIG"
 
 
 (cd pombase-legacy
