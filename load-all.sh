@@ -209,8 +209,22 @@ gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
        --assigned-by-filter=GOC,RNAcentral,InterPro,UniProtKB,UniProt "$HOST" $DB $USER $PASSWORD \
        2>&1 | tee $LOG_DIR/$log_file.goa_gene_association_japonicus
 
+echo load PANTHER annotation
+gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
+    $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
+       --taxon-filter=4897 --use-only-first-with-id \
+       --with-prefix-filter="PANTHER:" \
+       --term-id-filter-filename=<(cat $SOURCES/pombe-embl/goa-load-fixes/filtered_GO_IDs $JAPONICUS_CURATION/japonicusdb_only_filtered_GO_IDs) \
+       --with-filter-filename=$SOURCES/pombe-embl/goa-load-fixes/filtered_mappings \
+       --assigned-by-filter=GO_Central "$HOST" $DB $USER $PASSWORD \
+       2>&1 | tee $LOG_DIR/$log_file.goa_gene_association_panther_japonicus
+
 
 pg_dump $DB | gzip -9 > /tmp/japonicus-chado-20-after-goa.dump.gz
+
+
+echo annotation count after GAF loading:
+evidence_summary $DB
 
 
 echo load manual annotation
