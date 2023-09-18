@@ -206,7 +206,7 @@ gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
        --taxon-filter=4897 --use-only-first-with-id \
        --term-id-filter-filename=<(cat $SOURCES/pombe-embl/goa-load-fixes/filtered_GO_IDs $JAPONICUS_CURATION/japonicusdb_only_filtered_GO_IDs) \
        --with-filter-filename=$SOURCES/pombe-embl/goa-load-fixes/filtered_mappings \
-       --assigned-by-filter=EnsemblFungi,GOC,RNAcentral,InterPro,UniProtKB,UniProt "$HOST" $DB $USER $PASSWORD \
+       --assigned-by-filter=GOC,RNAcentral,InterPro,UniProtKB,UniProt "$HOST" $DB $USER $PASSWORD \
        2>&1 | tee $LOG_DIR/$log_file.goa_gene_association_japonicus
 
 
