@@ -212,7 +212,7 @@ gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
 echo load PANTHER annotation
 gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
     $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
-       --taxon-filter=4897 --use-only-first-with-id \
+       --taxon-filter=4897 \
        --with-prefix-filter="PANTHER:" \
        --term-id-filter-filename=<(cat $SOURCES/pombe-embl/goa-load-fixes/filtered_GO_IDs $JAPONICUS_CURATION/japonicusdb_only_filtered_GO_IDs) \
        --with-filter-filename=$SOURCES/pombe-embl/goa-load-fixes/filtered_mappings \
