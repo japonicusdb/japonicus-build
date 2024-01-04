@@ -406,7 +406,8 @@ evidence_summary $DB
 echo
 echo query PubMed for publication details, then store
 $POMBASE_CHADO/script/pubmed_util.pl $LOAD_CONFIG \
-  "$HOST" $DB $USER $PASSWORD --add-missing-fields 2>&1 | tee $LOG_DIR/$log_file.pubmed_query
+  "$HOST" $DB $USER $PASSWORD --add-missing-fields \
+  --organism-taxonid=4897 2>&1 | tee $LOG_DIR/$log_file.pubmed_query
 
 
 echo
