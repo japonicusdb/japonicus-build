@@ -199,9 +199,14 @@ pg_dump $DB | gzip -9 > /tmp/japonicus-chado-10-pre-goa.dump.gz
 
 
 CURRENT_GOA_GAF=$SOURCES/gene_association.goa_uniprot.gz
+GOA_POMBE_AND_JAPONICUS="$SOURCES/gene_association.goa_uniprot.pombe+japonicus.gz"
+GOA_VERSION=`cat $GOA_POMBE_AND_JAPONICUS.uniprot_version`
 
-echo load GOA annotation
-gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
+$POMBASE_CHADO/script/pombase-admin.pl $LOAD_CONFIG add-chado-prop \
+  "$HOST" $DB $USER $PASSWORD "UniProt-GOA_version" $GOA_VERSION
+
+echo reading $GOA_POMBE_AND_JAPONICUS
+gzip -d < $GOA_POMBE_AND_JAPONICUS | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
     $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
        --taxon-filter=4897 --use-only-first-with-id \
        --term-id-filter-filename=<(cat $SOURCES/pombe-embl/goa-load-fixes/filtered_GO_IDs $JAPONICUS_CURATION/japonicusdb_only_filtered_GO_IDs) \
