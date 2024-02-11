@@ -622,6 +622,7 @@ psql $DB -c "select count(distinct fc_id) as total from $sub_query;"
  ) > $CURRENT_BUILD_DIR/logs/$log_file.annotation_counts_by_cv
 
 
+echo creating files for the website:
 $POMCUR/bin/pombase-chado-json -c $MAIN_CONFIG \
    --doc-config-file $JBASE_HOME/pombase-website/src/app/config/doc-config.json \
    -p "postgres://$USER:$PASSWORD@localhost/$DB" \
