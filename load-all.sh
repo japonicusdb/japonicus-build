@@ -85,6 +85,10 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG organisms \
 #$JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG references-file \
 #    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/svn-supporting-files/PB_references.txt
 
+echo loading GO refs parsed from go-site/metadata/gorefs/
+$JBASE_HOME/pombase-chado/script/pombase-import.pl $POMBASE_LEGACY/load-pombase-chado.yaml references-file \
+    "$HOST" $DB $USER $PASSWORD < $SOURCES/pombe-embl/supporting_files/go_references.txt
+
 
 echo loading human genes
 $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
