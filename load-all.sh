@@ -199,7 +199,7 @@ echo annotation evidence counts before loading
 evidence_summary $DB
 
 
-pg_dump $DB | gzip -9 > /tmp/japonicus-chado-10-pre-goa.dump.gz
+pg_dump $DB | gzip -2 > /tmp/japonicus-chado-10-pre-goa.dump.gz
 
 
 CURRENT_GOA_GAF=$SOURCES/gene_association.goa_uniprot.gz
@@ -229,7 +229,7 @@ gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
        2>&1 | tee $LOG_DIR/$log_file.goa_gene_association_panther_japonicus
 
 
-pg_dump $DB | gzip -9 > /tmp/japonicus-chado-20-after-goa.dump.gz
+pg_dump $DB | gzip -2 > /tmp/japonicus-chado-20-after-goa.dump.gz
 
 
 echo annotation count after GAF loading:
@@ -244,7 +244,7 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
     2>&1 | tee $LOG_DIR/$log_file.manual_go_annotation
 
 
-pg_dump $DB | gzip -9 > /tmp/japonicus-chado-30-after-manual-annotation.dump.gz
+pg_dump $DB | gzip -2 > /tmp/japonicus-chado-30-after-manual-annotation.dump.gz
 
 
 echo load Compara pombe orthologs
@@ -305,7 +305,7 @@ $JBASE_HOME/pombase-chado/script/pombase-process.pl \
   "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.transfer_names_and_products
 
 
-pg_dump $DB | gzip -9 > /tmp/japonicus-chado-40-after-orthologs-and-names.dump.gz
+pg_dump $DB | gzip -2 > /tmp/japonicus-chado-40-after-orthologs-and-names.dump.gz
 
 
 
@@ -327,7 +327,7 @@ gzip -d < $WWW_DIR/dumps/latest_build/pombase-latest.gaf.gz |
        2>&1 | tee $LOG_DIR/$log_file.transfer_pombe_go_annotation
 
 
-pg_dump $DB | gzip -9 > /tmp/japonicus-chado-50-after-pombe-go-annotation.gz
+pg_dump $DB | gzip -2 > /tmp/japonicus-chado-50-after-pombe-go-annotation.gz
 
 
 echo load PDBe IDs
@@ -353,7 +353,7 @@ $JBASE_HOME/pombase-chado/script/pombase-process.pl \
     $LOAD_CONFIG add-reciprocal-ipi-annotations \
     --organism-taxonid=4897 "$HOST" $DB $USER $PASSWORD 2>&1 | tee $LOG_DIR/$log_file.add_reciprocal_ipi_annotations
 
-pg_dump $DB | gzip -9 > /tmp/japonicus-chado-60-after-reciprocal-ipi-annotations.gz
+pg_dump $DB | gzip -2 > /tmp/japonicus-chado-60-after-reciprocal-ipi-annotations.gz
 
 
 PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
@@ -381,7 +381,7 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG canto-json \
 echo annotation count after loading curation tool data:
 evidence_summary $DB
 
-pg_dump $DB | gzip -9 > /tmp/japonicus-chado-70-after-canto-data.gz
+pg_dump $DB | gzip -2 > /tmp/japonicus-chado-70-after-canto-data.gz
 
 
 echo
@@ -402,7 +402,7 @@ $JBASE_HOME/pombase-chado/script/pombase-process.pl $LOAD_CONFIG go-filter-with-
 echo done filtering using NOT annotations - `date`
 
 
-pg_dump $DB | gzip -9 > /tmp/japonicus-chado-80-go-filtering.gz
+pg_dump $DB | gzip -2 > /tmp/japonicus-chado-80-go-filtering.gz
 
 echo
 echo counts of assigned_by after filtering:
@@ -652,7 +652,7 @@ psql $DB -c 'grant select on all tables in schema public to public;'
 DUMP_FILE=$CURRENT_BUILD_DIR/$DB.chado_dump.gz
 
 echo dumping to $DUMP_FILE
-pg_dump $DB | gzip -9 > $DUMP_FILE
+pg_dump $DB | gzip -2 > $DUMP_FILE
 
 rm -f $DUMPS_DIR/latest_build
 ln -s $CURRENT_BUILD_DIR $DUMPS_DIR/latest_build
