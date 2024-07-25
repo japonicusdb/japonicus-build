@@ -219,7 +219,7 @@ gzip -d < $GOA_POMBE_AND_JAPONICUS | perl -ne 'print if /\ttaxon:(4897|402676)\t
        2>&1 | tee $LOG_DIR/$log_file.goa_gene_association_japonicus
 
 echo load PANTHER annotation
-gzip -d < $CURRENT_GOA_GAF | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
+gzip -d < $GOA_POMBE_AND_JAPONICUS | perl -ne 'print if /\ttaxon:(4897|402676)\t/' |
     $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
        --taxon-filter=4897 \
        --with-prefix-filter="PANTHER:" \
