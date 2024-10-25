@@ -632,7 +632,6 @@ $POMCUR/bin/pombase-chado-json -c $MAIN_CONFIG \
    -p "postgres://$USER:$PASSWORD@localhost/$DB" \
    -d $CURRENT_BUILD_DIR/ --go-eco-mapping=$SOURCES/gaf-eco-mapping.txt \
    -i $JAPONICUS_SOURCES/japonicus_domain_results.json \
-   --pfam-data-file $JAPONICUS_CURATION/pfam_japonicus_protein_data.json \
    --pdb-data-file $SOURCES/pombe-embl/external_data/protein_structure/systematic_id_to_pdbe_mapping_japonicus.tsv \
    2>&1 | tee $LOG_DIR/$log_file.web-json-write
 
