@@ -62,6 +62,7 @@ OBO_FILES="\
  pombe-embl/mini-ontologies/has_qualifier_range.obo \
  pombe-embl/mini-ontologies/pombase_gene_expression_ontology.obo \
  fypo-simple-pombase.obo \
+ mondo-simple.obo \
  $GO_OBO"
 
 CONNECT_STRING="dbi:Pg:dbname=$DB"
@@ -94,6 +95,8 @@ export OWLTOOLS_MEMORY=20g
 (cd $SOURCES_DIR; $CHADO_CLOSURE_TOOL $HOST $DB $USER $PASSWORD $OBO_FILES)
 
 date; echo finished
+
+psql -q $DB -c "UPDATE cv SET name = 'mondo' WHERE name LIKE 'mondo/%';"
 
 # prevent duplicate feature uniquenames
 psql -q $DB -c 'CREATE UNIQUE INDEX pombase_feature_uniquename_unique_idx ON feature(uniquename);'

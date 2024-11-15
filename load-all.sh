@@ -82,8 +82,8 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG organisms \
     "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CONFIG/japonicus_organism_config.tsv
 
 #echo loading PB refs
-#$JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG references-file \
-#    "$HOST" $DB $USER $PASSWORD < $JBASE_HOME/svn-supporting-files/PB_references.txt
+$JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG references-file \
+    "$HOST" $DB $USER $PASSWORD < $SOURCES/pombe-embl/supporting_files/PB_references.txt
 
 echo loading GO refs parsed from go-site/metadata/gorefs/
 $JBASE_HOME/pombase-chado/script/pombase-import.pl $POMBASE_LEGACY/load-pombase-chado.yaml references-file \
@@ -307,6 +307,24 @@ $JBASE_HOME/pombase-chado/script/pombase-process.pl \
 
 pg_dump $DB | gzip -2 > /tmp/japonicus-chado-40-after-orthologs-and-names.dump.gz
 
+
+echo
+echo load Monarch causal disease associations from gene_disease.9606.tsv.gz
+gzip -d < $SOURCES/gene_disease.9606.tsv.gz |
+    $POMBASE_CHADO/script/pombase-import.pl load-pombase-chado.yaml monarch-disease \
+         --destination-taxonid=4897 --add-qualifier=causal --monarch-reference=PB_REF:0000006 \
+         "$HOST" $DB $USER $PASSWORD 2>&1 |
+    tee $LOG_DIR/$log_file.monarch_causal
+
+echo
+echo load Monarch non-causal disease associations from gene_disease.noncausal.tsv.gz
+gzip -d < $SOURCES/gene_disease.noncausal.tsv.gz |
+    perl -ne '@a = split /\t/; print if $a[6] eq "biolink:contributes_to"' |
+    $POMBASE_CHADO/script/pombase-import.pl load-pombase-chado.yaml monarch-disease \
+         --destination-taxonid=4897 --add-qualifier=contributes_to \
+         --monarch-reference=PB_REF:0000006 \
+         "$HOST" $DB $USER $PASSWORD 2>&1 |
+    tee $LOG_DIR/$log_file.monarch_noncausal
 
 
 PGPASSWORD=$PASSWORD psql -U $USER -h "$HOST" $DB -c 'analyze'
