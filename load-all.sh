@@ -311,7 +311,7 @@ pg_dump $DB | gzip -2 > /tmp/japonicus-chado-40-after-orthologs-and-names.dump.g
 echo
 echo load Monarch causal disease associations from gene_disease.9606.tsv.gz
 gzip -d < $SOURCES/gene_disease.9606.tsv.gz |
-    $POMBASE_CHADO/script/pombase-import.pl load-pombase-chado.yaml monarch-disease \
+    $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG monarch-disease \
          --destination-taxonid=4897 --add-qualifier=causal --monarch-reference=PB_REF:0000006 \
          "$HOST" $DB $USER $PASSWORD 2>&1 |
     tee $LOG_DIR/$log_file.monarch_causal
@@ -320,7 +320,7 @@ echo
 echo load Monarch non-causal disease associations from gene_disease.noncausal.tsv.gz
 gzip -d < $SOURCES/gene_disease.noncausal.tsv.gz |
     perl -ne '@a = split /\t/; print if $a[6] eq "biolink:contributes_to"' |
-    $POMBASE_CHADO/script/pombase-import.pl load-pombase-chado.yaml monarch-disease \
+    $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG monarch-disease \
          --destination-taxonid=4897 --add-qualifier=contributes_to \
          --monarch-reference=PB_REF:0000006 \
          "$HOST" $DB $USER $PASSWORD 2>&1 |
