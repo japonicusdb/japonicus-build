@@ -30,6 +30,9 @@ POMCUR=/var/pomcur
 SOURCES=$POMCUR/sources
 JAPONICUS_SOURCES=$POMCUR/japonicus_sources
 
+BASE_DB=japonicusdb-base-$DATE_VERSION
+DB=japonicusdb-build-$DATE_VERSION
+
 WWW_DIR=/var/www/pombase
 DUMPS_DIR=$WWW_DIR/japonicus_nightly
 BUILDS_DIR=$DUMPS_DIR/builds
@@ -64,9 +67,6 @@ POMBASE_LEGACY=$JBASE_HOME/pombase-legacy
  export PERL5LIB=$POMBASE_CHADO/lib:$JBASE_HOME/chobo/lib/
  time nice -19 $JAPONICUS_BUILD/make-db $JBASE_HOME $DATE "$HOST" $USER $PASSWORD) || die "make-db failed"
 
-
-BASE_DB=japonicusdb-base-$DATE_VERSION
-DB=japonicusdb-build-$DATE_VERSION
 
 createdb -T $BASE_DB $DB
 
