@@ -31,6 +31,9 @@ SOURCES=$POMCUR/sources
 JAPONICUS_SOURCES=$POMCUR/japonicus_sources
 
 WWW_DIR=/var/www/pombase
+DUMPS_DIR=$WWW_DIR/japonicus_nightly
+BUILDS_DIR=$DUMPS_DIR/builds
+CURRENT_BUILD_DIR=$BUILDS_DIR/$DB
 
 POMBASE_NIGHTLY=$WWW_DIR/dumps
 
@@ -246,6 +249,18 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG gaf \
 
 pg_dump $DB | gzip -2 > /tmp/japonicus-chado-30-after-manual-annotation.dump.gz
 
+echo "loading features created from UniProt data file"
+
+$POMCUR/bin/pombase-create-annotations uniprot-data-tsv \
+    --assigned-by=UniProt \
+    --uniprot-reference=PMID:36408920 \
+    --glycosylation-site-termid=MOD:00693 \
+    --disulphide-bond-termid=MOD:00689 \
+    --filter-references=PMID:18257517 \
+    --peptide-fasta=<(gzip -d < $DUMPS_DIR/latest_build/fasta/feature_sequences/peptide.fa.gz) \
+    $SOURCES/pombe-embl/external_data/uniprot_data_from_api_japonicus.tsv |
+$POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-annotation \
+    --organism-taxonid=4897 "$HOST" $DB $USER $PASSWORD
 
 echo load Compara pombe orthologs
 
@@ -456,10 +471,6 @@ fi
 echo Chado checks $CHADO_CHECKS_STATUS
 
 
-DUMPS_DIR=$WWW_DIR/japonicus_nightly
-BUILDS_DIR=$DUMPS_DIR/builds
-CURRENT_BUILD_DIR=$BUILDS_DIR/$DB
-
 mkdir -p $CURRENT_BUILD_DIR
 mkdir -p $CURRENT_BUILD_DIR/logs
 mkdir -p $CURRENT_BUILD_DIR/exports
@@ -651,6 +662,8 @@ $POMCUR/bin/pombase-chado-json -c $MAIN_CONFIG \
    -d $CURRENT_BUILD_DIR/ --go-eco-mapping=$SOURCES/gaf-eco-mapping.txt \
    -i $JAPONICUS_SOURCES/japonicus_domain_results.json \
    --pdb-data-file $SOURCES/pombe-embl/external_data/protein_structure/systematic_id_to_pdbe_mapping_japonicus.tsv \
+   --uniprot-data-file $SOURCES/pombe-embl/external_data/uniprot_data_from_api_japonicus.tsv \
+   --filter-uniprot-references=PMID:18257517 \
    2>&1 | tee $LOG_DIR/$log_file.web-json-write
 
 find $CURRENT_BUILD_DIR/fasta -name '*.fa' | xargs gzip -9f
