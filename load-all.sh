@@ -254,6 +254,7 @@ echo "loading features created from UniProt data file"
 $POMCUR/bin/pombase-create-annotations uniprot-data-tsv \
     --assigned-by=UniProt \
     --uniprot-reference=PMID:36408920 \
+    --n-glycsylated-residue-termid=MOD:00006 \
     --glycosylation-site-termid=MOD:00693 \
     --disulphide-bond-termid=MOD:00689 \
     --filter-references=PMID:18257517 \
