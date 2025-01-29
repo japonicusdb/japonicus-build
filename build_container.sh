@@ -23,6 +23,7 @@ container_dir=.
  ln -sf japonicus-logo-small.png logo-small.png
  ln -sf japonicus-logo-tiny.png logo-tiny.png)
 
+cp japonicus-build/setup_jbrowse2_in_container.sh $container_dir/container_scripts/
 
 rsync -aL --delete-after --exclude '*~' pombase-chado/etc/docker-conf/ $container_dir/conf/
 
