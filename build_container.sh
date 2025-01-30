@@ -43,5 +43,7 @@ pombase-chado/etc/create_jbrowse_track_list.pl \
    $container_dir/trackList.json $container_dir/jbrowse_track_metadata.csv \
    $container_dir/minimal_jbrowse_track_list.json
 
+touch $container_dir/jbrowse2_config.json
+
 echo building container ...
 docker build -f conf/Dockerfile-main --build-arg database_name=japonicusdb --build-arg target=prod -t=japonicus/web:$version-prod .
