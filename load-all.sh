@@ -475,6 +475,7 @@ echo Chado checks $CHADO_CHECKS_STATUS
 mkdir -p $CURRENT_BUILD_DIR
 mkdir -p $CURRENT_BUILD_DIR/logs
 mkdir -p $CURRENT_BUILD_DIR/exports
+mkdir -p $CURRENT_BUILD_DIR/pombe-embl/supporting_files
 
 
 (
@@ -677,6 +678,9 @@ zstd -9q --rm $CURRENT_BUILD_DIR/api_maps.sqlite3
 
 
 cp $LOG_DIR/*.txt $CURRENT_BUILD_DIR/logs/
+
+cp $SOURCES/pombe-embl/supporting_files/PB_references.txt \
+   $CURRENT_BUILD_DIR/pombe-embl/supporting_files/
 
 psql $DB -c 'grant select on all tables in schema public to public;'
 
