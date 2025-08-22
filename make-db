@@ -50,8 +50,6 @@ OBO_FILES="\
  pombe-embl/mini-ontologies/iao.obo \
  pombe-embl/mini-ontologies/quiescence.obo \
  pombase_fypo_github/supplemental_files/fypo_extension_relations.obo \
- go-ontology-github/src/ontology/extensions/gorel.obo \
- go-svn/scratch/xps/go_annotation_extension_relations.obo \
  pombe-embl/mini-ontologies/fypo_extension.obo \
  pombe-embl/mini-ontologies/chebi.obo \
  pombe-embl/mini-ontologies/cl.obo \
