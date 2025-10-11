@@ -163,7 +163,7 @@ psql -q $DB -c "CREATE MATERIALIZED VIEW pombase_extension_rels_and_values AS SE
  cv_id = (select cv_id from cv where name = 'fission_yeast_phenotype'))) and
  rel_type.cv_id = (select cv_id from cv where name = 'fypo_extension_relations');"
 
-psql -q $DB <<'EOF'
+psql -U $USER -h $HOST -q $DB <<'EOF'
 CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
   WITH
   pub_community_curated_flags AS
@@ -173,6 +173,7 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
    WHERE prop_type.name = 'canto_curator_role')
  SELECT gene.uniquename AS gene_uniquename,
         'FC:' || fc.feature_cvterm_id AS id, pub.uniquename AS pmid,
+   (SELECT value FROM organismprop p WHERE p.organism_id = organism.organism_id) AS taxonid,
    (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) AS publication_community_curated,
    (SELECT distinct(value)
     FROM feature_cvtermprop date_prop
@@ -195,13 +196,13 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
         (SELECT cvterm_id
          FROM cvterm
          WHERE name = 'canto_session')) AS session,
-   (SELECT distinct(value)
-    FROM feature_cvtermprop session_prop
-    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
-      AND session_prop.type_id IN
+   array_to_string(array (SELECT distinct(value)
+    FROM feature_cvtermprop curator_name_prop
+    WHERE fc.feature_cvterm_id = curator_name_prop.feature_cvterm_id
+      AND curator_name_prop.type_id IN
         (SELECT cvterm_id
          FROM cvterm
-         WHERE name = 'curator_name')) AS curator_name,
+         WHERE name = 'curator_name')), ',') AS curator_name,
    (SELECT distinct(value)
     FROM feature_cvtermprop session_prop
     WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
@@ -239,6 +240,7 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
          WHERE name = 'source_file')) AS source_file,
    base_cv_name AS annotation_type
  FROM feature gene
+ JOIN organism ON gene.organism_id = organism.organism_id
  JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
  JOIN feature_relationship r ON r.object_id = gene.feature_id
  JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
@@ -249,6 +251,7 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
  UNION
  SELECT gene.uniquename AS gene_uniquename,
         'FC:' || fc.feature_cvterm_id AS id, pub.uniquename AS pmid,
+   (SELECT value FROM organismprop p WHERE p.organism_id = organism.organism_id) AS taxonid,
    (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
    (SELECT distinct(value)
     FROM feature_cvtermprop date_prop
@@ -271,13 +274,13 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
         (SELECT cvterm_id
          FROM cvterm
          WHERE name = 'canto_session')) AS session,
-   (SELECT distinct(value)
+   array_to_string(array (SELECT distinct(value)
     FROM feature_cvtermprop session_prop
     WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
       AND session_prop.type_id IN
         (SELECT cvterm_id
          FROM cvterm
-         WHERE name = 'curator_name')) AS curator_name,
+         WHERE name = 'curator_name')), ',') AS curator_name,
    (SELECT distinct(value)
     FROM feature_cvtermprop session_prop
     WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
@@ -315,6 +318,7 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
          WHERE name = 'source_file')) AS source_file,
    base_cv_name AS annotation_type
  FROM feature gene
+ JOIN organism ON gene.organism_id = organism.organism_id
  JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
  JOIN feature_relationship r ON r.object_id = gene.feature_id
  JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
@@ -328,6 +332,7 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
  UNION
  SELECT gene.uniquename AS gene_uniquename,
         'FC:' || fc.feature_cvterm_id AS id, pub.uniquename AS pmid,
+   (SELECT value FROM organismprop p WHERE p.organism_id = organism.organism_id) AS taxonid,
    (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
    (SELECT distinct(value)
     FROM feature_cvtermprop date_prop
@@ -350,24 +355,24 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
         (SELECT cvterm_id
          FROM cvterm
          WHERE name = 'canto_session')) AS session,
-   (SELECT distinct(value)
-    FROM feature_cvtermprop session_prop
-    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
-      AND session_prop.type_id IN
+   array_to_string(array (SELECT distinct(value)
+     FROM feature_cvtermprop curator_name_prop
+    WHERE fc.feature_cvterm_id = curator_name_prop.feature_cvterm_id
+      AND curator_name_prop.type_id IN
         (SELECT cvterm_id
          FROM cvterm
-         WHERE name = 'curator_name')) AS curator_name,
+         WHERE name = 'curator_name')), ',') AS curator_name,
    (SELECT distinct(value)
-    FROM feature_cvtermprop session_prop
-    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
-      AND session_prop.type_id IN
+    FROM feature_cvtermprop community_curated_prop
+    WHERE fc.feature_cvterm_id = community_curated_prop.feature_cvterm_id
+      AND community_curated_prop.type_id IN
         (SELECT cvterm_id
          FROM cvterm
          WHERE name = 'community_curated'))::boolean AS community_curated,
    (SELECT distinct(value)
-    FROM feature_cvtermprop session_prop
-    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
-      AND session_prop.type_id IN
+    FROM feature_cvtermprop annotation_throughput_type_prop
+    WHERE fc.feature_cvterm_id = annotation_throughput_type_prop.feature_cvterm_id
+      AND annotation_throughput_type_prop.type_id IN
         (SELECT cvterm_id
          FROM cvterm
          WHERE name = 'annotation_throughput_type') limit 1) AS annotation_throughput_type,
@@ -394,6 +399,7 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
          WHERE name = 'source_file')) AS source_file,
    base_cv_name AS annotation_type
  FROM feature gene
+ JOIN organism ON gene.organism_id = organism.organism_id
  JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
  JOIN feature_relationship allele_gene_rel ON allele_gene_rel.object_id = gene.feature_id
  JOIN feature allele ON allele.feature_id = allele_gene_rel.subject_id
@@ -409,6 +415,7 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
  UNION
  SELECT sub.uniquename AS gene_uniquename,
         'FR:' || r.feature_relationship_id AS id, pub.uniquename AS pmid,
+   (SELECT value FROM organismprop p WHERE p.organism_id = organism.organism_id) AS taxonid,
    (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
    (SELECT distinct(value)
     FROM feature_relationshipprop date_prop
@@ -431,13 +438,13 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
         (SELECT cvterm_id
          FROM cvterm
          WHERE name = 'canto_session')) AS session,
-   (SELECT distinct(value)
+   array_to_string(array (SELECT distinct(value)
     FROM feature_relationshipprop session_prop
     WHERE r.feature_relationship_id = session_prop.feature_relationship_id
       AND session_prop.type_id IN
         (SELECT cvterm_id
          FROM cvterm
-         WHERE name = 'curator_name')) AS curator_name,
+         WHERE name = 'curator_name')), ',') AS curator_name,
    (SELECT distinct(value)
     FROM feature_relationshipprop session_prop
     WHERE r.feature_relationship_id = session_prop.feature_relationship_id
@@ -471,15 +478,18 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
  FROM feature_relationship r
  JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
  JOIN feature sub ON r.subject_id = sub.feature_id
+ JOIN organism ON sub.organism_id = organism.organism_id
  JOIN cvterm ft ON sub.type_id = ft.cvterm_id
  JOIN feature_relationship_pub frp ON frp.feature_relationship_id = r.feature_relationship_id
  JOIN pub ON frp.pub_id = pub.pub_id
  WHERE ft.name = 'gene'
    AND (rel_type.name = 'interacts_genetically'
-        OR rel_type.name = 'interacts_physically')
+        OR rel_type.name = 'interacts_physically'
+        OR rel_type.name = 'orthologous_to')
  UNION
  SELECT obj.uniquename AS gene_uniquename,
         'FR:' || r.feature_relationship_id AS id, pub.uniquename AS pmid,
+   (SELECT value FROM organismprop p WHERE p.organism_id = organism.organism_id) AS taxonid,
    (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
    (SELECT distinct(value)
     FROM feature_relationshipprop date_prop
@@ -502,13 +512,13 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
         (SELECT cvterm_id
          FROM cvterm
          WHERE name = 'canto_session')) AS session,
-   (SELECT distinct(value)
+   array_to_string(array (SELECT distinct(value)
     FROM feature_relationshipprop session_prop
     WHERE r.feature_relationship_id = session_prop.feature_relationship_id
       AND session_prop.type_id IN
         (SELECT cvterm_id
          FROM cvterm
-         WHERE name = 'curator_name')) AS curator_name,
+         WHERE name = 'curator_name')), ',') AS curator_name,
    (SELECT distinct(value)
     FROM feature_relationshipprop session_prop
     WHERE r.feature_relationship_id = session_prop.feature_relationship_id
@@ -542,16 +552,108 @@ CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
  FROM feature_relationship r
  JOIN cvterm rel_type ON r.type_id = rel_type.cvterm_id
  JOIN feature obj ON r.object_id = obj.feature_id
+ JOIN organism ON obj.organism_id = organism.organism_id
  JOIN cvterm ft ON obj.type_id = ft.cvterm_id
  JOIN feature_relationship_pub frp ON frp.feature_relationship_id = r.feature_relationship_id
  JOIN pub ON frp.pub_id = pub.pub_id
  WHERE ft.name = 'gene'
    AND (rel_type.name = 'interacts_genetically'
-        OR rel_type.name = 'interacts_physically');
+        OR rel_type.name = 'interacts_physically'
+        OR rel_type.name = 'orthologous_to')
+UNION
+  SELECT gene.uniquename AS gene_uniquename,
+   'FT:' || genotype_interaction.feature_id AS id, pub.uniquename AS pmid,
+   (SELECT value FROM organismprop p WHERE p.organism_id = organism.organism_id) AS taxonid,
+   (SELECT flag FROM pub_community_curated_flags fl WHERE fl.pub_id = pub.pub_id) as publication_community_curated,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop date_prop
+    WHERE fc.feature_cvterm_id = date_prop.feature_cvterm_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) AS annotation_date,
+   substring((SELECT distinct(value)
+    FROM feature_cvtermprop date_prop
+    WHERE fc.feature_cvterm_id = date_prop.feature_cvterm_id
+      AND date_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'date')) FROM E'^(\\d\\d\\d\\d)')::integer AS annotation_year,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'canto_session')) AS session,
+   array_to_string(array (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'curator_name')), ',') AS curator_name,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'community_curated'))::boolean AS community_curated,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop session_prop
+    WHERE fc.feature_cvterm_id = session_prop.feature_cvterm_id
+      AND session_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'annotation_throughput_type') limit 1) AS annotation_throughput_type,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop evidence_prop
+    WHERE fc.feature_cvterm_id = evidence_prop.feature_cvterm_id
+      AND evidence_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'evidence')) AS evidence_code,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop assigned_by_prop
+    WHERE fc.feature_cvterm_id = assigned_by_prop.feature_cvterm_id
+      AND assigned_by_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'assigned_by')) AS annotation_source,
+   (SELECT distinct(value)
+    FROM feature_cvtermprop source_file_prop
+    WHERE fc.feature_cvterm_id = source_file_prop.feature_cvterm_id
+      AND source_file_prop.type_id IN
+        (SELECT cvterm_id
+         FROM cvterm
+         WHERE name = 'source_file')) AS source_file,
+   'interacts_genetically' AS annotation_type
+ FROM feature gene
+ JOIN organism ON gene.organism_id = organism.organism_id
+ JOIN cvterm gene_type ON gene_type.cvterm_id = gene.type_id
+ JOIN feature_relationship allele_gene_rel ON allele_gene_rel.object_id = gene.feature_id
+ JOIN feature allele ON allele.feature_id = allele_gene_rel.subject_id
+ JOIN cvterm allele_gene_rel_type ON allele_gene_rel.type_id = allele_gene_rel_type.cvterm_id
+ JOIN feature_relationship allele_genotype_rel ON allele_genotype_rel.subject_id = allele.feature_id
+ JOIN feature genotype ON allele_genotype_rel.object_id = genotype.feature_id
+ JOIN cvterm allele_genotype_rel_type ON allele_genotype_rel.type_id = allele_genotype_rel_type.cvterm_id
+ JOIN feature_relationship genotype_interaction_rel ON genotype_interaction_rel.subject_id = genotype.feature_id
+ JOIN cvterm genotype_interaction_rel_type ON genotype_interaction_rel.type_id = genotype_interaction_rel_type.cvterm_id
+ JOIN feature genotype_interaction ON genotype_interaction_rel.object_id = genotype_interaction.feature_id
+ JOIN cvterm genotype_interaction_type ON genotype_interaction_type.cvterm_id = genotype_interaction.type_id
+ JOIN pombase_feature_cvterm_ext_resolved_terms fc ON genotype_interaction.feature_id = fc.feature_id
+ JOIN pub ON fc.pub_id = pub.pub_id
+WHERE allele_gene_rel_type.name = 'instance_of'
+AND allele_genotype_rel_type.name = 'part_of'
+AND gene_type.name = 'gene'
+AND genotype_interaction_type.name = 'genotype_interaction'
+AND (genotype_interaction_rel_type.name = 'interaction_genotype_a'
+  OR genotype_interaction_rel_type.name = 'interaction_genotype_b');
 EOF
 
-psql -q $DB -c "CREATE MATERIALIZED VIEW pombase_annotation_summary AS
-SELECT distinct id, pmid, publication_community_curated, annotation_date,
+psql -U $USER -h $HOST -q $DB -c "CREATE MATERIALIZED VIEW pombase_annotation_summary AS
+SELECT distinct id, pmid, taxonid, publication_community_curated, annotation_date,
        annotation_year, session, curator_name, community_curated, annotation_throughput_type,
        evidence_code, annotation_source, source_file, annotation_type
   FROM pombase_genes_annotations_dates;"
