@@ -163,7 +163,7 @@ psql -q $DB -c "CREATE MATERIALIZED VIEW pombase_extension_rels_and_values AS SE
  cv_id = (select cv_id from cv where name = 'fission_yeast_phenotype'))) and
  rel_type.cv_id = (select cv_id from cv where name = 'fypo_extension_relations');"
 
-psql -U $USER -h $HOST -q $DB <<'EOF'
+psql -q $DB <<'EOF'
 CREATE MATERIALIZED VIEW pombase_genes_annotations_dates AS
   WITH
   pub_community_curated_flags AS
@@ -652,7 +652,7 @@ AND (genotype_interaction_rel_type.name = 'interaction_genotype_a'
   OR genotype_interaction_rel_type.name = 'interaction_genotype_b');
 EOF
 
-psql -U $USER -h $HOST -q $DB -c "CREATE MATERIALIZED VIEW pombase_annotation_summary AS
+psql -q $DB -c "CREATE MATERIALIZED VIEW pombase_annotation_summary AS
 SELECT distinct id, pmid, taxonid, publication_community_curated, annotation_date,
        annotation_year, session, curator_name, community_curated, annotation_throughput_type,
        evidence_code, annotation_source, source_file, annotation_type
