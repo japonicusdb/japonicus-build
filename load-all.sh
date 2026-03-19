@@ -171,6 +171,11 @@ $POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
     --feature-uniquename-column=1 --property-column=2 \
     "$HOST" $DB $USER $PASSWORD < $JAPONICUS_CURATION/pombe_systematic_id_uniprot_mapping.tsv
 
+echo Load SOG identifiers
+$POMBASE_CHADO/script/pombase-import.pl $LOAD_CONFIG generic-property \
+    --property-name="schizosaccharomyces_orthogroup" --organism-taxonid=4897 \
+    --feature-uniquename-column=1 --property-column=2 \
+    "$HOST" $DB $USER $PASSWORD < $SOURCES/pombe-embl/external_data/li-lin_du_japonicus_sog_ids.txt
 
 evidence_summary () {
   DB=$1
