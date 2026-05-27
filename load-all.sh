@@ -97,6 +97,7 @@ echo loading human genes
 $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
     --organism-taxonid=9606 --uniquename-column=1 --name-column=2 --feature-type=gene \
     --transcript-so-name=transcript --product-column=3 \
+    --feature-prop-from-column=agr_identifier:1 \
     --ignore-lines-matching="^hgnc_id.symbol" --ignore-short-lines \
     "$HOST" $DB $USER $PASSWORD < $SOURCES/hgnc_complete_set.txt
 
@@ -104,11 +105,11 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
 echo loading protein coding genes from SGD data file
 $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
     --organism-taxonid=4932 --uniquename-column=5 --name-column=6 \
-    --product-column=4 \
-    --column-filter="1=ORF,blocked_reading_frame,blocked reading frame" --feature-type=gene \
-    --transcript-so-name=transcript \
+    --column-filter="1=ORF,blocked_reading_frame,blocked reading frame" \
+    --product-column=4 --feature-type=gene --transcript-so-name=transcript \
     --feature-prop-from-column=sgd_identifier:3 \
-    "$HOST" $DB $USER $PASSWORD < $SOURCES/sgd_yeastmine_genes.tsv
+    --feature-prop-from-column=agr_identifier:3 \
+    "$HOST" $DB $USER $PASSWORD < $SOURCES/filtered_SGD_features.tab
 
 for so_type in ncRNA snoRNA
 do
@@ -116,8 +117,8 @@ do
   $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
       --organism-taxonid=4932 --uniquename-column=5 --name-column=6 \
       --transcript-so-name=$so_type \
-      --column-filter="1=${so_type} gene" --feature-type=gene \
-      "$HOST" $DB $USER $PASSWORD < $SOURCES/sgd_yeastmine_genes.tsv
+      --column-filter="1=${so_type}_gene" --feature-type=gene \
+      "$HOST" $DB $USER $PASSWORD < $SOURCES/filtered_SGD_features.tab
 done
 
 
