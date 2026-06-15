@@ -131,6 +131,12 @@ $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
     --transcript-so-name=mRNA --column-filter="7=protein coding gene" \
     "$HOST" $DB $USER $PASSWORD < $POMBASE_NIGHTLY/latest_build/misc/gene_IDs_names_products.tsv
 
+$JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
+    --organism-taxonid=4896 --uniquename-column=1 --name-column=3 --feature-type=pseudogene \
+    --product-column=5 --ignore-short-lines \
+    --transcript-so-name=pseudogenic_transcript --column-filter="7=pseudogene" \
+    "$HOST" $DB $USER $PASSWORD < $POMBASE_NIGHTLY/latest_build/misc/gene_IDs_names_products.tsv
+
 for so_type in ncRNA tRNA snoRNA rRNA snRNA
 do
   $JBASE_HOME/pombase-chado/script/pombase-import.pl $LOAD_CONFIG features \
