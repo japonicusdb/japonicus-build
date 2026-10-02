@@ -25,6 +25,7 @@ container_dir=.
 
 cp japonicus-build/setup_jbrowse2_in_container.sh $container_dir/container_scripts/
 cp pombase-website/etc/PomBasePlugin.js $container_dir/
+cp /var/pomcur/container_build/pombase-scripts/settings.json pombase-scripts/
 
 rsync -aL --delete-after --exclude '*~' pombase-chado/etc/docker-conf/ $container_dir/conf/
 
